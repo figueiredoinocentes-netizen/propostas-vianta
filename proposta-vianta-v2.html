@@ -1671,11 +1671,6 @@ function renderProposta() {
           ${car.autonomia && car.autonomia !== '—' ? `<div class="spec-item"><div class="spec-label">Autonomia</div><div class="spec-val">${car.autonomia}</div></div>` : ''}
           ${car.cavalos ? `<div class="spec-item"><div class="spec-label">Potência</div><div class="spec-val">${car.cavalos}</div></div>` : ''}
         </div>
-        ${car.pontosDif ? `
-        <div style="margin-top:10px">
-          <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-400);margin-bottom:6px;">Pontos diferenciadores</div>
-          <div style="font-size:12px;color:var(--gray-600);white-space:pre-line;line-height:1.6;">${car.pontosDif}</div>
-        </div>` : ''}
         ${car.categorias ? `
         <div style="margin-top:10px">
           <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px;">Categorias TVDE</div>
