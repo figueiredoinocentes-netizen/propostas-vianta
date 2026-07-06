@@ -1084,6 +1084,23 @@ function nearestTerm(months) {
 function fmtEur(val) {
   return new Intl.NumberFormat('pt-PT', {style:'currency', currency:'EUR', maximumFractionDigits:0}).format(Math.round(val || 0));
 }
+function fmtPrestacao(v) {
+  if (!v) return '';
+  const n = parsePriceNum(v);
+  if (n) return fmtEur(n);
+  return /€/.test(v) ? v : v + '€';
+}
+function fmtPrazo(v) {
+  if (!v) return '';
+  const s = v.trim();
+  return /^\d+$/.test(s) ? s + ' meses' : s;
+}
+function fmtEntrada(v) {
+  if (!v) return '';
+  const n = parsePriceNum(v);
+  if (n) return fmtEur(n);
+  return /€/.test(v) ? v : v + '€';
+}
 
 function calcScenarioA(car, sd, entrada) {
   const precoNum = parsePriceNum(car.preco);
@@ -1611,9 +1628,9 @@ function renderProposta() {
                   <th style="text-align:left;padding:4px 0;font-size:10px;font-weight:500;color:var(--gray-400);">Entrada</th>
                 </tr></thead>
                 <tbody>${fin.planos.map((p, i) => `<tr style="border-bottom:1px solid var(--gray-100);">
-                  <td style="padding:6px 8px 6px 0;font-weight:500;">${p.prazo || '—'}</td>
-                  <td style="padding:6px 8px;font-weight:600;color:var(--black);">${p.prestacao || '—'}</td>
-                  <td style="padding:6px 0;">${i === 0 ? (entradaDisplay || '—') : ''}</td>
+                  <td style="padding:6px 8px 6px 0;font-weight:500;">${fmtPrazo(p.prazo) || '—'}</td>
+                  <td style="padding:6px 8px;font-weight:600;color:var(--black);">${fmtPrestacao(p.prestacao) || '—'}</td>
+                  <td style="padding:6px 0;">${i === 0 ? (fmtEntrada(entradaDisplay) || '—') : ''}</td>
                 </tr>`).join('')}</tbody>
               </table>
               <div style="font-size:10px;color:var(--gray-400);margin-top:4px;">estimativa sujeita a aprovação de crédito</div>`;
@@ -1622,11 +1639,11 @@ function renderProposta() {
               return `<div class="fin-block" style="margin-top:10px">
                 <div class="fin-cell">
                   <div class="fin-label">Prestação/mês</div>
-                  <div class="fin-val big">${fin.prestacao}</div>
+                  <div class="fin-val big">${fmtPrestacao(fin.prestacao)}</div>
                   <div class="fin-sub">estimativa sujeita a aprovação</div>
                 </div>
-                ${fin.prazo ? `<div class="fin-cell"><div class="fin-label">Prazo</div><div class="fin-val">${fin.prazo}</div></div>` : ''}
-                ${entradaDisplay ? `<div class="fin-cell"><div class="fin-label">Entrada</div><div class="fin-val">${entradaDisplay}</div></div>` : ''}
+                ${fin.prazo ? `<div class="fin-cell"><div class="fin-label">Prazo</div><div class="fin-val">${fmtPrazo(fin.prazo)}</div></div>` : ''}
+                ${entradaDisplay ? `<div class="fin-cell"><div class="fin-label">Entrada</div><div class="fin-val">${fmtEntrada(entradaDisplay)}</div></div>` : ''}
               </div>`;
             }
             return '';
@@ -1715,11 +1732,11 @@ function renderProposta() {
           return `<div class="fin-block" style="margin-top:10px">
             <div class="fin-cell">
               <div class="fin-label">Prestação/mês</div>
-              <div class="fin-val big">${fin.prestacao || '—'}</div>
+              <div class="fin-val big">${fmtPrestacao(fin.prestacao) || '—'}</div>
               <div class="fin-sub">estimativa sujeita a aprovação</div>
             </div>
-            <div class="fin-cell"><div class="fin-label">Prazo</div><div class="fin-val">${fin.prazo || '—'}</div></div>
-            ${fin.entrada ? `<div class="fin-cell"><div class="fin-label">Entrada</div><div class="fin-val">${fin.entrada}</div></div>` : ''}
+            <div class="fin-cell"><div class="fin-label">Prazo</div><div class="fin-val">${fmtPrazo(fin.prazo) || '—'}</div></div>
+            ${fin.entrada ? `<div class="fin-cell"><div class="fin-label">Entrada</div><div class="fin-val">${fmtEntrada(fin.entrada)}</div></div>` : ''}
           </div>`;
         })()}
         ${car.estado === 'Por Encomenda' ? `<div class="prop-disclaimer" style="margin-top:12px;">Viatura disponível <strong>por encomenda</strong>. Prazo de entrega e disponibilidade de stock sujeitos a confirmação. Valores de financiamento são estimativas sujeitas a aprovação de crédito.</div>` : ''}
@@ -1779,8 +1796,8 @@ function renderProposta() {
           <div class="hero-teaser-info">
             <div class="hero-teaser-name">${car.name}${car.versao ? ` <em>${car.versao}</em>` : ''}</div>
             ${fin.prestacao ? `
-              <div class="hero-teaser-fin">${fin.prestacao}<span style="font-size:14px;color:var(--gray-400);font-family:var(--sans);margin-left:4px;">/mês</span></div>
-              <div class="hero-teaser-fin-sub">${fin.prazo ? fin.prazo + ' · ' : ''}estimativa sujeita a aprovação</div>
+              <div class="hero-teaser-fin">${fmtPrestacao(fin.prestacao)}<span style="font-size:14px;color:var(--gray-400);font-family:var(--sans);margin-left:4px;">/mês</span></div>
+              <div class="hero-teaser-fin-sub">${fin.prazo ? fmtPrazo(fin.prazo) + ' · ' : ''}estimativa sujeita a aprovação</div>
             ` : ''}
             <div class="hero-teaser-specs">
               <div class="hero-teaser-spec"><strong>${car.preco}</strong></div>
@@ -1806,8 +1823,8 @@ function renderProposta() {
           <div class="hero-teaser-info">
             <div class="hero-teaser-name">${car.marca || 'Viatura'}</div>
             ${fin.prestacao ? `
-              <div class="hero-teaser-fin">${fin.prestacao}<span style="font-size:14px;color:var(--gray-400);font-family:var(--sans);margin-left:4px;">/mês</span></div>
-              <div class="hero-teaser-fin-sub">${fin.prazo ? fin.prazo + ' · ' : ''}estimativa sujeita a aprovação</div>
+              <div class="hero-teaser-fin">${fmtPrestacao(fin.prestacao)}<span style="font-size:14px;color:var(--gray-400);font-family:var(--sans);margin-left:4px;">/mês</span></div>
+              <div class="hero-teaser-fin-sub">${fin.prazo ? fmtPrazo(fin.prazo) + ' · ' : ''}estimativa sujeita a aprovação</div>
             ` : ''}
             ${car.preco || car.combustivel || car.autonomia || car.cavalos ? `
             <div class="hero-teaser-specs">
