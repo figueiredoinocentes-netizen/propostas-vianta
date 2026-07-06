@@ -1084,10 +1084,13 @@ function nearestTerm(months) {
 function fmtEur(val) {
   return new Intl.NumberFormat('pt-PT', {style:'currency', currency:'EUR', maximumFractionDigits:0}).format(Math.round(val || 0));
 }
+function fmtMoney(n) {
+  return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '€';
+}
 function fmtPrestacao(v) {
   if (!v) return '';
   const n = parsePriceNum(v);
-  if (n) return fmtEur(n);
+  if (n) return fmtMoney(n);
   return /€/.test(v) ? v : v + '€';
 }
 function fmtPrazo(v) {
@@ -1098,7 +1101,7 @@ function fmtPrazo(v) {
 function fmtEntrada(v) {
   if (!v) return '';
   const n = parsePriceNum(v);
-  if (n) return fmtEur(n);
+  if (n) return fmtMoney(n);
   return /€/.test(v) ? v : v + '€';
 }
 
