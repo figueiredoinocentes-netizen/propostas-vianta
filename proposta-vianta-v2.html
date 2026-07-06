@@ -1286,19 +1286,26 @@ function renderFinBlock(wrap, id, carName, fins) {
     </button>`).join('');
 
   const custom = finCustom[id] || {};
+  const idJ = JSON.stringify(id);
   const customFields = isCustom ? `
     <div class="fin-custom-fields">
-      <div class="fin-custom-row">
+      <div style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gray-600);margin-bottom:6px;">Simulação personalizada</div>
+      <div class="fin-custom-row" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <div>
-          <div class="fin-custom-label">Prestação/mês</div>
-          <input class="fin-custom-input" type="text" placeholder="ex: 450 €" value="${custom.prestacao || ''}"
-            oninput="finCustom[${JSON.stringify(id)}]=finCustom[${JSON.stringify(id)}]||{};finCustom[${JSON.stringify(id)}].prestacao=this.value;renderProposta()">
+          <div class="fin-custom-label">Entrada (opcional)</div>
+          <input class="fin-custom-input" type="text" placeholder="ex: 2.500 €" value="${finEntradas[id] || ''}"
+            oninput="finEntradas[${idJ}]=this.value;renderProposta()">
         </div>
         <div>
           <div class="fin-custom-label">Prazo</div>
-          <input class="fin-custom-input" type="text" placeholder="ex: 72 meses" value="${custom.prazo || ''}"
-            oninput="finCustom[${JSON.stringify(id)}]=finCustom[${JSON.stringify(id)}]||{};finCustom[${JSON.stringify(id)}].prazo=this.value;renderProposta()">
+          <input class="fin-custom-input" type="text" placeholder="ex: 120 meses" value="${custom.prazo || ''}"
+            oninput="finCustom[${idJ}]=finCustom[${idJ}]||{};finCustom[${idJ}].prazo=this.value;renderProposta()">
         </div>
+      </div>
+      <div>
+        <div class="fin-custom-label">Prestação/mês</div>
+        <input class="fin-custom-input" type="text" placeholder="ex: 320 €" value="${custom.prestacao || ''}"
+          oninput="finCustom[${idJ}]=finCustom[${idJ}]||{};finCustom[${idJ}].prestacao=this.value;renderProposta()">
       </div>
     </div>` : '';
 
@@ -1310,16 +1317,16 @@ function renderFinBlock(wrap, id, carName, fins) {
       <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-400);">Plano de Financiamento</div>
       <div class="fin-pills">
         ${pillsHTML}
-        <button class="fin-pill ${isCustom ? 'active' : ''}" onclick="selectTerm(${JSON.stringify(id)},'custom')" type="button">
-          <span class="fin-pill-prazo">Personalizado</span>
-          <span class="fin-pill-val" style="color:var(--accent)">✎ à mão</span>
+        <button class="fin-pill ${isCustom ? 'active' : ''}" onclick="selectTerm(${idJ},'custom')" type="button">
+          <span class="fin-pill-prazo">+ Simulação</span>
+          <span class="fin-pill-val" style="color:var(--accent)">personalizada</span>
         </button>
       </div>
       ${customFields}
-      <div class="field-group">
+      ${!isCustom ? `<div class="field-group">
         <label class="field-label">Entrada</label>
-        <input type="text" class="fin-entrada" placeholder="0 €" value="${finEntradas[id] || ''}" oninput="finEntradas[${JSON.stringify(id)}]=this.value;renderProposta()">
-      </div>
+        <input type="text" class="fin-entrada" placeholder="0 €" value="${finEntradas[id] || ''}" oninput="finEntradas[${idJ}]=this.value;renderProposta()">
+      </div>` : ''}
     </div>`;
   wrap.appendChild(block);
 }
