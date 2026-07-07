@@ -524,6 +524,13 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); backgro
 .about-stat-num { font-family: var(--serif); font-size: 34px; line-height: 1; }
 .about-stat-label { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
 .about-text { font-size: 14px; color: var(--gray-600); line-height: 1.7; }
+.about-trust { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+.about-trust-card { flex: 1; min-width: 180px; display: flex; align-items: flex-start; gap: 10px; background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 8px; padding: 14px 16px; }
+.about-trust-icon { flex-shrink: 0; width: 32px; height: 32px; border-radius: 6px; background: var(--black); display: flex; align-items: center; justify-content: center; }
+.about-trust-title { font-size: 11px; font-weight: 600; color: var(--gray-600); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 3px; }
+.about-trust-val { font-size: 13px; color: var(--black); line-height: 1.4; }
+.about-trust-sub { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+.about-stars { color: #F5A623; font-size: 13px; letter-spacing: 1px; }
 
 /* cta */
 .prop-cta {
@@ -1959,6 +1966,28 @@ function renderProposta() {
       <div class="about-stat"><div class="about-stat-num">100%</div><div class="about-stat-label">Focados em TVDE</div></div>
     </div>
     <p class="about-text">Não vendemos carros — criamos as condições para trabalhares em TVDE com tranquilidade. Tratamos do financiamento, do seguro, da legalização e da integração na frota. O teu único trabalho é conduzir.</p>
+    <div class="about-trust">
+      <div class="about-trust-card">
+        <div class="about-trust-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#F5A623"/></svg>
+        </div>
+        <div>
+          <div class="about-trust-title">Avaliação Google</div>
+          <div class="about-trust-val"><span class="about-stars">★★★★★</span> <strong>5.0</strong></div>
+          <div class="about-trust-sub">6 avaliações verificadas</div>
+        </div>
+      </div>
+      <div class="about-trust-card">
+        <div class="about-trust-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#fff"/></svg>
+        </div>
+        <div>
+          <div class="about-trust-title">Instalações físicas</div>
+          <div class="about-trust-val">Av. Silvério Galrão Nogueira 8</div>
+          <div class="about-trust-sub">Cheleiros · 2640-169 Lisboa</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- CTA -->
