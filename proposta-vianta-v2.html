@@ -814,6 +814,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); backgro
 
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:auto;">
       <button class="btn-primary" id="btn-export" onclick="exportPDF()">⬇ Exportar PDF</button>
+      <button class="btn-secondary" id="btn-lang" onclick="toggleLang()" style="font-size:12px;">🇬🇧 EN</button>
       <button class="btn-secondary" onclick="resetForm()">↺ Nova proposta</button>
     </div>
   </div>
@@ -1063,6 +1064,15 @@ const finSelections = {};    // { carId: Set<index|'custom'> }
 const finEntradas = {};      // { carId: string }
 const finCustom = {};        // { carId: { prestacao, prazo } }
 const finScenarioData = {};  // { carId: { cenarios, receitaMensal, kmsAnuais, taxaTAN } }
+
+let LANG = 'pt';
+function t(pt, en) { return LANG === 'en' ? en : pt; }
+function toggleLang() {
+  LANG = LANG === 'pt' ? 'en' : 'pt';
+  const btn = document.getElementById('btn-lang');
+  if (btn) btn.textContent = LANG === 'en' ? '🇵🇹 PT' : '🇬🇧 EN';
+  renderProposta();
+}
 
 // ── HELPERS FINANCEIROS ──
 function parsePriceNum(str) {
@@ -1341,7 +1351,7 @@ function renderFinBlock(wrap, id, carName, fins) {
   block.innerHTML = `
     <div class="fin-car-header">${carName}</div>
     <div class="fin-car-fields">
-      <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-400);">Plano de Financiamento</div>
+      <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-400);">${t('Plano de Financiamento', 'Financing Plan')}</div>
       <div class="fin-pills">
         ${pillsHTML}
         <button class="fin-pill ${isCustom ? 'active' : ''}" onclick="selectTerm(${idJ},'custom')" type="button">
@@ -1451,7 +1461,7 @@ function renderFinInputs() {
       block.innerHTML = `
         <div class="fin-car-header">${carName}</div>
         <div class="fin-car-fields">
-          <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-400);">Planos de Financiamento</div>
+          <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-400);">${t('Planos de Financiamento', 'Financing Plans')}</div>
           <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
             ${planosHTML}
             <button class="cons-plan-add" onclick="addConsPlano('${cid}')">+ Adicionar plano</button>
@@ -1545,11 +1555,11 @@ function renderProposta() {
   const retomaPrazo = document.getElementById('f-retoma-prazo')?.value.trim() || '';
   const perfil = document.getElementById('f-perfil').value;
   const taglines = {
-    aluguer: 'Deixa de pagar para trabalhar no carro de outra pessoa. Com viatura própria, a prestação mensal pode ser igual ou inferior ao que pagas hoje em aluguer — e o carro é teu.',
-    inelegivel: 'O teu carro atual vai deixar de ser elegível para TVDE. Esta é a altura certa para fazer a transição — sem pressas, com tempo para escolher a melhor opção.',
-    upgrade: 'A tua viatura atual já não é a melhor opção para o que procuras. Com esta viatura tens acesso a melhores condições de trabalho em TVDE — mais conforto, mais categorias disponíveis e melhor experiência para os teus passageiros.',
+    aluguer: t('Deixa de pagar para trabalhar no carro de outra pessoa. Com viatura própria, a prestação mensal pode ser igual ou inferior ao que pagas hoje em aluguer — e o carro é teu.', 'Stop paying to work in someone else\'s car. With your own vehicle, the monthly payment can be equal to or less than what you pay today in rental — and the car is yours.'),
+    inelegivel: t('O teu carro atual vai deixar de ser elegível para TVDE. Esta é a altura certa para fazer a transição — sem pressas, com tempo para escolher a melhor opção.', 'Your current car will soon become ineligible for TVDE. This is the right time to make the switch — no rush, with time to choose the best option.'),
+    upgrade: t('A tua viatura atual já não é a melhor opção para o que procuras. Com esta viatura tens acesso a melhores condições de trabalho em TVDE — mais conforto, mais categorias disponíveis e melhor experiência para os teus passageiros.', 'Your current vehicle is no longer the best option for what you need. With this vehicle you get access to better TVDE working conditions — more comfort, more categories and a better experience for your passengers.'),
   };
-  const tagline = taglines[perfil] || 'Preparámos esta proposta com base na nossa conversa. Tudo o que precisas para trabalhar com viatura própria em TVDE, numa só solução.';
+  const tagline = taglines[perfil] || t('Preparámos esta proposta com base na nossa conversa. Tudo o que precisas para trabalhar com viatura própria em TVDE, numa só solução.', 'We prepared this proposal based on our conversation. Everything you need to work with your own vehicle in TVDE, in one single solution.');
 
   const prop = document.getElementById('proposta');
 
@@ -1610,32 +1620,32 @@ function renderProposta() {
         ${extraPhotosBlock}
         <div class="car-card-body">
           <div class="car-specs-grid">
-            ${car.preco ? `<div class="spec-item"><div class="spec-label">Preço</div><div class="spec-val">${car.preco}</div></div>` : ''}
-            ${car.ano ? `<div class="spec-item"><div class="spec-label">Ano</div><div class="spec-val">${car.ano}</div></div>` : ''}
-            ${car.km ? `<div class="spec-item"><div class="spec-label">Quilómetros</div><div class="spec-val">${car.km}</div></div>` : ''}
-            ${car.combustivel ? `<div class="spec-item"><div class="spec-label">Combustível</div><div class="spec-val">${car.combustivel}</div></div>` : ''}
-            ${car.autonomia ? `<div class="spec-item"><div class="spec-label">Autonomia</div><div class="spec-val">${/km/i.test(car.autonomia) ? car.autonomia : car.autonomia + ' km'}</div></div>` : ''}
-            ${car.cavalos ? `<div class="spec-item"><div class="spec-label">Potência</div><div class="spec-val">${/cv/i.test(car.cavalos) ? car.cavalos : car.cavalos + ' cv'}</div></div>` : ''}
+            ${car.preco ? `<div class="spec-item"><div class="spec-label">${t('Preço', 'Price')}</div><div class="spec-val">${car.preco}</div></div>` : ''}
+            ${car.ano ? `<div class="spec-item"><div class="spec-label">${t('Ano', 'Year')}</div><div class="spec-val">${car.ano}</div></div>` : ''}
+            ${car.km ? `<div class="spec-item"><div class="spec-label">${t('Quilómetros', 'Mileage')}</div><div class="spec-val">${car.km}</div></div>` : ''}
+            ${car.combustivel ? `<div class="spec-item"><div class="spec-label">${t('Combustível', 'Fuel')}</div><div class="spec-val">${car.combustivel}</div></div>` : ''}
+            ${car.autonomia ? `<div class="spec-item"><div class="spec-label">${t('Autonomia', 'Range')}</div><div class="spec-val">${/km/i.test(car.autonomia) ? car.autonomia : car.autonomia + ' km'}</div></div>` : ''}
+            ${car.cavalos ? `<div class="spec-item"><div class="spec-label">${t('Potência', 'Power')}</div><div class="spec-val">${/cv/i.test(car.cavalos) ? car.cavalos : car.cavalos + ' cv'}</div></div>` : ''}
           </div>
           ${retomaRow}
           ${(() => {
             if (retoma && retomaPrestacao) {
               return `<div class="fin-block" style="margin-top:10px">
                 <div class="fin-cell">
-                  <div class="fin-label">Prestação/mês</div>
+                  <div class="fin-label">${t('Prestação/mês', 'Monthly payment')}</div>
                   <div class="fin-val big">${retomaPrestacao}</div>
-                  <div class="fin-sub">estimativa sujeita a aprovação</div>
+                  <div class="fin-sub">${t('estimativa sujeita a aprovação', 'estimate subject to approval')}</div>
                 </div>
-                ${retomaPrazo ? `<div class="fin-cell"><div class="fin-label">Prazo</div><div class="fin-val">${retomaPrazo}</div></div>` : ''}
+                ${retomaPrazo ? `<div class="fin-cell"><div class="fin-label">${t('Prazo', 'Term')}</div><div class="fin-val">${retomaPrazo}</div></div>` : ''}
               </div>`;
             }
             if (fin.planos.length > 1) {
-              return `<div style="margin-top:10px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:6px;">Opções de Financiamento</div>
+              return `<div style="margin-top:10px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:6px;">${t('Opções de Financiamento', 'Financing Options')}</div>
               <table style="width:100%;border-collapse:collapse;font-size:13px;">
                 <thead><tr style="border-bottom:1px solid var(--gray-200);">
-                  <th style="text-align:left;padding:4px 8px 4px 0;font-size:10px;font-weight:500;color:var(--gray-400);">Prazo</th>
-                  <th style="text-align:left;padding:4px 8px;font-size:10px;font-weight:500;color:var(--gray-400);">Prestação/mês</th>
-                  <th style="text-align:left;padding:4px 0;font-size:10px;font-weight:500;color:var(--gray-400);">Entrada</th>
+                  <th style="text-align:left;padding:4px 8px 4px 0;font-size:10px;font-weight:500;color:var(--gray-400);">${t('Prazo', 'Term')}</th>
+                  <th style="text-align:left;padding:4px 8px;font-size:10px;font-weight:500;color:var(--gray-400);">${t('Prestação/mês', 'Monthly payment')}</th>
+                  <th style="text-align:left;padding:4px 0;font-size:10px;font-weight:500;color:var(--gray-400);">${t('Entrada', 'Down payment')}</th>
                 </tr></thead>
                 <tbody>${fin.planos.map((p, i) => `<tr style="border-bottom:1px solid var(--gray-100);">
                   <td style="padding:6px 8px 6px 0;font-weight:500;">${fmtPrazo(p.prazo) || '—'}</td>
@@ -1643,23 +1653,23 @@ function renderProposta() {
                   <td style="padding:6px 0;">${i === 0 ? (fmtEntrada(entradaDisplay) || '—') : ''}</td>
                 </tr>`).join('')}</tbody>
               </table>
-              <div style="font-size:10px;color:var(--gray-400);margin-top:4px;">estimativa sujeita a aprovação de crédito</div>`;
+              <div style="font-size:10px;color:var(--gray-400);margin-top:4px;">${t('estimativa sujeita a aprovação de crédito', 'estimate subject to credit approval')}</div>`;
             }
             if (fin.prestacao) {
               return `<div class="fin-block" style="margin-top:10px">
                 <div class="fin-cell">
-                  <div class="fin-label">Prestação/mês</div>
+                  <div class="fin-label">${t('Prestação/mês', 'Monthly payment')}</div>
                   <div class="fin-val big">${fmtPrestacao(fin.prestacao)}</div>
-                  <div class="fin-sub">estimativa sujeita a aprovação</div>
+                  <div class="fin-sub">${t('estimativa sujeita a aprovação', 'estimate subject to approval')}</div>
                 </div>
-                ${fin.prazo ? `<div class="fin-cell"><div class="fin-label">Prazo</div><div class="fin-val">${fmtPrazo(fin.prazo)}</div></div>` : ''}
-                ${entradaDisplay ? `<div class="fin-cell"><div class="fin-label">Entrada</div><div class="fin-val">${fmtEntrada(entradaDisplay)}</div></div>` : ''}
+                ${fin.prazo ? `<div class="fin-cell"><div class="fin-label">${t('Prazo', 'Term')}</div><div class="fin-val">${fmtPrazo(fin.prazo)}</div></div>` : ''}
+                ${entradaDisplay ? `<div class="fin-cell"><div class="fin-label">${t('Entrada', 'Down payment')}</div><div class="fin-val">${fmtEntrada(entradaDisplay)}</div></div>` : ''}
               </div>`;
             }
             return '';
           })()}
         </div>
-        <div class="prop-disclaimer">Esta viatura foi identificada pela Vianta como adequada ao teu perfil. Os valores apresentados são estimativas indicativas, sujeitas a aprovação de crédito e à disponibilidade de financiamento.</div>
+        <div class="prop-disclaimer">${t('Esta viatura foi identificada pela Vianta como adequada ao teu perfil. Os valores apresentados são estimativas indicativas, sujeitas a aprovação de crédito e à disponibilidade de financiamento.', 'This vehicle was identified by Vianta as suitable for your profile. The values shown are indicative estimates, subject to credit approval and financing availability.')}</div>
       </div>`;
     });
   } else {
@@ -1698,16 +1708,16 @@ function renderProposta() {
       ${stockExtraPhotosBlock}
       <div class="car-card-body">
         <div class="car-specs-grid">
-          <div class="spec-item"><div class="spec-label">Preço</div><div class="spec-val">${car.preco}</div></div>
-          <div class="spec-item"><div class="spec-label">Ano</div><div class="spec-val">${car.ano}</div></div>
-          <div class="spec-item"><div class="spec-label">Quilómetros</div><div class="spec-val">${car.km}</div></div>
-          <div class="spec-item"><div class="spec-label">Combustível</div><div class="spec-val">${car.combustivel}</div></div>
-          ${car.autonomia && car.autonomia !== '—' ? `<div class="spec-item"><div class="spec-label">Autonomia</div><div class="spec-val">${car.autonomia}</div></div>` : ''}
-          ${car.cavalos ? `<div class="spec-item"><div class="spec-label">Potência</div><div class="spec-val">${car.cavalos}</div></div>` : ''}
+          <div class="spec-item"><div class="spec-label">${t('Preço', 'Price')}</div><div class="spec-val">${car.preco}</div></div>
+          <div class="spec-item"><div class="spec-label">${t('Ano', 'Year')}</div><div class="spec-val">${car.ano}</div></div>
+          <div class="spec-item"><div class="spec-label">${t('Quilómetros', 'Mileage')}</div><div class="spec-val">${car.km}</div></div>
+          <div class="spec-item"><div class="spec-label">${t('Combustível', 'Fuel')}</div><div class="spec-val">${car.combustivel}</div></div>
+          ${car.autonomia && car.autonomia !== '—' ? `<div class="spec-item"><div class="spec-label">${t('Autonomia', 'Range')}</div><div class="spec-val">${car.autonomia}</div></div>` : ''}
+          ${car.cavalos ? `<div class="spec-item"><div class="spec-label">${t('Potência', 'Power')}</div><div class="spec-val">${car.cavalos}</div></div>` : ''}
         </div>
         ${car.categorias ? `
         <div style="margin-top:10px">
-          <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px;">Categorias TVDE</div>
+          <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px;">${t('Categorias TVDE', 'TVDE Categories')}</div>
           <div style="font-size:12px;color:var(--gray-600);">${car.categorias}</div>
         </div>` : ''}
         ${retomaRow}
@@ -1718,18 +1728,18 @@ function renderProposta() {
               <div class="fin-cell">
                 <div class="fin-label">Prestação/mês</div>
                 <div class="fin-val big">${retomaPrestacao}</div>
-                <div class="fin-sub">estimativa sujeita a aprovação</div>
+                <div class="fin-sub">${t('estimativa sujeita a aprovação', 'estimate subject to approval')}</div>
               </div>
-              ${retomaPrazo ? `<div class="fin-cell"><div class="fin-label">Prazo</div><div class="fin-val">${retomaPrazo}</div></div>` : ''}
+              ${retomaPrazo ? `<div class="fin-cell"><div class="fin-label">${t('Prazo', 'Term')}</div><div class="fin-val">${retomaPrazo}</div></div>` : ''}
             </div>`;
           }
           if (fin.planos.length > 1) {
-            return `<div style="margin-top:10px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:6px;">Opções de Financiamento</div>
+            return `<div style="margin-top:10px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:6px;">${t('Opções de Financiamento', 'Financing Options')}</div>
             <table style="width:100%;border-collapse:collapse;font-size:13px;">
               <thead><tr style="border-bottom:1px solid var(--gray-200);">
-                <th style="text-align:left;padding:4px 8px 4px 0;font-size:10px;font-weight:500;color:var(--gray-400);">Prazo</th>
-                <th style="text-align:left;padding:4px 8px;font-size:10px;font-weight:500;color:var(--gray-400);">Prestação/mês</th>
-                <th style="text-align:left;padding:4px 0;font-size:10px;font-weight:500;color:var(--gray-400);">Entrada</th>
+                <th style="text-align:left;padding:4px 8px 4px 0;font-size:10px;font-weight:500;color:var(--gray-400);">${t('Prazo', 'Term')}</th>
+                <th style="text-align:left;padding:4px 8px;font-size:10px;font-weight:500;color:var(--gray-400);">${t('Prestação/mês', 'Monthly payment')}</th>
+                <th style="text-align:left;padding:4px 0;font-size:10px;font-weight:500;color:var(--gray-400);">${t('Entrada', 'Down payment')}</th>
               </tr></thead>
               <tbody>${fin.planos.map((p, i) => `<tr style="border-bottom:1px solid var(--gray-100);">
                 <td style="padding:6px 8px 6px 0;font-weight:500;">${p.prazo || '—'}</td>
@@ -1737,19 +1747,19 @@ function renderProposta() {
                 <td style="padding:6px 0;">${i === 0 ? (fin.entrada || '—') : ''}</td>
               </tr>`).join('')}</tbody>
             </table>
-            <div style="font-size:10px;color:var(--gray-400);margin-top:4px;">estimativa sujeita a aprovação de crédito</div>`;
+            <div style="font-size:10px;color:var(--gray-400);margin-top:4px;">${t('estimativa sujeita a aprovação de crédito', 'estimate subject to credit approval')}</div>`;
           }
           return `<div class="fin-block" style="margin-top:10px">
             <div class="fin-cell">
               <div class="fin-label">Prestação/mês</div>
               <div class="fin-val big">${fmtPrestacao(fin.prestacao) || '—'}</div>
-              <div class="fin-sub">estimativa sujeita a aprovação</div>
+              <div class="fin-sub">${t('estimativa sujeita a aprovação', 'estimate subject to approval')}</div>
             </div>
-            <div class="fin-cell"><div class="fin-label">Prazo</div><div class="fin-val">${fmtPrazo(fin.prazo) || '—'}</div></div>
-            ${fin.entrada ? `<div class="fin-cell"><div class="fin-label">Entrada</div><div class="fin-val">${fmtEntrada(fin.entrada)}</div></div>` : ''}
+            <div class="fin-cell"><div class="fin-label">${t('Prazo', 'Term')}</div><div class="fin-val">${fmtPrazo(fin.prazo) || '—'}</div></div>
+            ${fin.entrada ? `<div class="fin-cell"><div class="fin-label">${t('Entrada', 'Down payment')}</div><div class="fin-val">${fmtEntrada(fin.entrada)}</div></div>` : ''}
           </div>`;
         })()}
-        ${car.estado === 'Por Encomenda' ? `<div class="prop-disclaimer" style="margin-top:12px;">Viatura disponível <strong>por encomenda</strong>. Prazo de entrega e disponibilidade de stock sujeitos a confirmação. Valores de financiamento são estimativas sujeitas a aprovação de crédito.</div>` : ''}
+        ${car.estado === 'Por Encomenda' ? `<div class="prop-disclaimer" style="margin-top:12px;">${t('Viatura disponível <strong>por encomenda</strong>. Prazo de entrega e disponibilidade de stock sujeitos a confirmação. Valores de financiamento são estimativas sujeitas a aprovação de crédito.', 'Vehicle available <strong>on order</strong>. Delivery time and stock availability subject to confirmation. Financing values are estimates subject to credit approval.')}</div>` : ''}
         ${(() => {
           const sd = finScenarioData[id] || {};
           const cenarios = sd.cenarios || '';
@@ -1760,7 +1770,7 @@ function renderProposta() {
           if (cenarios === 'A' || cenarios === 'AB') {
             const dA = calcScenarioA(car, sd, fin.entrada);
             cardA = renderScenarioCard(
-              'Cenário A — Financiamento pelo período TVDE',
+              t('Cenário A — Financiamento pelo período TVDE', 'Scenario A — Financing over the TVDE period'),
               `Prazo ${dA.prazo} meses · Prestação estimada ${fmtEur(dA.pmt)}/mês · Elegibilidade até ${fmtData(dA.fimEleg)}`,
               dA, ''
             );
@@ -1768,7 +1778,7 @@ function renderProposta() {
           if (cenarios === 'B' || cenarios === 'AB') {
             const dB = calcScenarioB(car, sd, fin, fin.entrada);
             cardB = renderScenarioCard(
-              'Cenário B — Financiamento período padrão',
+              t('Cenário B — Financiamento período padrão', 'Scenario B — Standard financing period'),
               `Prazo ${dB.prazoMeses} meses · Prestação ${fmtEur(dB.pmtMensal)}/mês · Elegibilidade TVDE até ${fmtData(dB.fimEleg)}`,
               dB,
               'Nos anos pós-TVDE, o carro pode ser vendido para liquidar o crédito antecipadamente.'
@@ -1786,8 +1796,8 @@ function renderProposta() {
 
   const numCarros = propostaMode === 'consultoria' ? consultoriaCars.length : selected.size;
   const sectionTitle = numCarros > 1
-    ? `Preparámos <em>${numCarros} opções</em> para ti`
-    : `A viatura <em>ideal</em> para ti`;
+    ? t(`Preparámos <em>${numCarros} opções</em> para ti`, `We prepared <em>${numCarros} options</em> for you`)
+    : t('A viatura <em>ideal</em> para ti', 'The <em>ideal</em> vehicle for you');
 
   // Hero teaser cards (stock only — consultoria cars have no photos from FROTA)
   const heroTeaserHTML = propostaMode === 'stock' && selected.size > 0 ? `
@@ -1807,12 +1817,12 @@ function renderProposta() {
             <div class="hero-teaser-name">${car.name}${car.versao ? ` <em>${car.versao}</em>` : ''}</div>
             ${fin.prestacao ? `
               <div class="hero-teaser-fin">${fmtPrestacao(fin.prestacao)}<span style="font-size:14px;color:var(--gray-400);font-family:var(--sans);margin-left:4px;">/mês</span></div>
-              <div class="hero-teaser-fin-sub">${fin.prazo ? fmtPrazo(fin.prazo) + ' · ' : ''}estimativa sujeita a aprovação</div>
+              <div class="hero-teaser-fin-sub">${fin.prazo ? fmtPrazo(fin.prazo) + ' · ' : ''}${t('estimativa sujeita a aprovação', 'estimate subject to approval')}</div>
             ` : ''}
             <div class="hero-teaser-specs">
               <div class="hero-teaser-spec"><strong>${car.preco}</strong></div>
               <div class="hero-teaser-spec">${car.combustivel}</div>
-              ${car.autonomia && car.autonomia !== '—' ? `<div class="hero-teaser-spec">${car.autonomia} autonomia</div>` : ''}
+              ${car.autonomia && car.autonomia !== '—' ? `<div class="hero-teaser-spec">${car.autonomia} ${t('autonomia', 'range')}</div>` : ''}
             </div>
           </div>
         </div>`;
@@ -1834,13 +1844,13 @@ function renderProposta() {
             <div class="hero-teaser-name">${car.marca || 'Viatura'}</div>
             ${fin.prestacao ? `
               <div class="hero-teaser-fin">${fmtPrestacao(fin.prestacao)}<span style="font-size:14px;color:var(--gray-400);font-family:var(--sans);margin-left:4px;">/mês</span></div>
-              <div class="hero-teaser-fin-sub">${fin.prazo ? fmtPrazo(fin.prazo) + ' · ' : ''}estimativa sujeita a aprovação</div>
+              <div class="hero-teaser-fin-sub">${fin.prazo ? fmtPrazo(fin.prazo) + ' · ' : ''}${t('estimativa sujeita a aprovação', 'estimate subject to approval')}</div>
             ` : ''}
             ${car.preco || car.combustivel || car.autonomia || car.cavalos ? `
             <div class="hero-teaser-specs">
               ${car.preco ? `<div class="hero-teaser-spec"><strong>${car.preco}</strong></div>` : ''}
               ${car.combustivel ? `<div class="hero-teaser-spec">${car.combustivel}</div>` : ''}
-              ${car.autonomia ? `<div class="hero-teaser-spec">${/km/i.test(car.autonomia) ? car.autonomia : car.autonomia + ' km'} autonomia</div>` : ''}
+              ${car.autonomia ? `<div class="hero-teaser-spec">${/km/i.test(car.autonomia) ? car.autonomia : car.autonomia + ' km'} ${t('autonomia', 'range')}</div>` : ''}
               ${car.cavalos ? `<div class="hero-teaser-spec">${/cv/i.test(car.cavalos) ? car.cavalos : car.cavalos + ' cv'}</div>` : ''}
             </div>` : ''}
           </div>
@@ -1851,38 +1861,37 @@ function renderProposta() {
   prop.innerHTML = `
   ${TWEAKS.showTopBar ? `<div class="prop-topbar" style="background:${TWEAKS.topBarColor}">
     <img id="topbar-logo" src="${LOGO_SRC}" alt="Vianta TVDE" style="height:38px;display:block;">
-    <div class="prop-topbar-tag">Proposta Comercial</div>
+    <div class="prop-topbar-tag">${t('Proposta Comercial', 'Commercial Proposal')}</div>
   </div>` : ''}
   <!-- HERO -->
   <div class="prop-hero">
-    <div class="prop-greeting">Proposta personalizada</div>
+    <div class="prop-greeting">${t('Proposta personalizada', 'Personalised Proposal')}</div>
     <h1 class="prop-name"><em>${nomeDisplay}</em></h1>
     <p class="prop-tagline">${tagline}</p>
     <div class="prop-meta">
-      <div class="prop-meta-item"><div class="prop-meta-label">Gestor de conta</div><div class="prop-meta-val">${gestor || '—'}</div></div>
-      ${dataDisplay ? `<div class="prop-meta-item"><div class="prop-meta-label">Data</div><div class="prop-meta-val">${dataDisplay}</div></div>` : ''}
+      <div class="prop-meta-item"><div class="prop-meta-label">${t('Gestor de conta', 'Account Manager')}</div><div class="prop-meta-val">${gestor || '—'}</div></div>
+      ${dataDisplay ? `<div class="prop-meta-item"><div class="prop-meta-label">${t('Data', 'Date')}</div><div class="prop-meta-val">${dataDisplay}</div></div>` : ''}
     </div>
   </div>
 
   <!-- SOBRE A VIANTA -->
   <div class="prop-section">
-    <div class="prop-section-label">Quem somos</div>
-    <h2 class="prop-section-title">O teu parceiro TVDE <em>desde 2017</em></h2>
+    <div class="prop-section-label">${t('Quem somos', 'About us')}</div>
+    <h2 class="prop-section-title">${t('O teu parceiro TVDE <em>desde 2017</em>', 'Your TVDE partner <em>since 2017</em>')}</h2>
     <div class="about-stats">
-      <div class="about-stat"><div class="about-stat-num">2017</div><div class="about-stat-label">No mercado</div></div>
-      <div class="about-stat"><div class="about-stat-num">40+</div><div class="about-stat-label">Motoristas na frota</div></div>
-      <div class="about-stat"><div class="about-stat-num">100%</div><div class="about-stat-label">Focados em TVDE</div></div>
+      <div class="about-stat"><div class="about-stat-num">2017</div><div class="about-stat-label">${t('No mercado', 'In business')}</div></div>
+      <div class="about-stat"><div class="about-stat-num">40+</div><div class="about-stat-label">${t('Motoristas na frota', 'Drivers in fleet')}</div></div>
+      <div class="about-stat"><div class="about-stat-num">100%</div><div class="about-stat-label">${t('Focados em TVDE', 'TVDE focused')}</div></div>
     </div>
-    <p class="about-text">Não vendemos carros — criamos as condições para trabalhares em TVDE com tranquilidade. Tratamos do financiamento, do seguro, da legalização e da integração na frota. O teu único trabalho é conduzir.</p>
+    <p class="about-text">${t('Não vendemos carros — criamos as condições para trabalhares em TVDE com tranquilidade. Tratamos do financiamento, do seguro, da legalização e da integração na frota. O teu único trabalho é conduzir.', "We don't sell cars — we create the conditions for you to work in TVDE with peace of mind. We handle the financing, insurance, legalization and fleet integration. Your only job is to drive.")}</p>
     <div class="about-trust">
       <div class="about-trust-card">
         <div class="about-trust-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#F5A623"/></svg>
         </div>
         <div>
-          <div class="about-trust-title">Avaliação Google</div>
+          <div class="about-trust-title">${t('Avaliação Google', 'Google Rating')}</div>
           <div class="about-trust-val"><span class="about-stars">★★★★★</span> <strong>5.0</strong></div>
-          <div class="about-trust-sub">6 avaliações verificadas</div>
         </div>
       </div>
       <div class="about-trust-card">
@@ -1890,7 +1899,7 @@ function renderProposta() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#fff"/></svg>
         </div>
         <div>
-          <div class="about-trust-title">Instalações físicas</div>
+          <div class="about-trust-title">${t('Instalações físicas', 'Physical location')}</div>
           <div class="about-trust-val">Av. Silvério Galrão Nogueira 8</div>
           <div class="about-trust-sub">Cheleiros · 2640-169 Lisboa</div>
         </div>
@@ -1900,24 +1909,24 @@ function renderProposta() {
 
   <!-- VIATURAS -->
   <div class="prop-section">
-    <div class="prop-section-label">${numCarros > 1 ? 'As tuas opções' : 'A tua viatura'}</div>
+    <div class="prop-section-label">${numCarros > 1 ? t('As tuas opções', 'Your options') : t('A tua viatura', 'Your vehicle')}</div>
     <h2 class="prop-section-title">${sectionTitle}</h2>
     ${carsHTML}
   </div>
 
   <!-- INCLUÍDO -->
   <div class="prop-section">
-    <div class="prop-section-label">O que está incluído</div>
-    <h2 class="prop-section-title">Pronto a trabalhar no <em>primeiro dia</em></h2>
+    <div class="prop-section-label">${t('O que está incluído', "What's included")}</div>
+    <h2 class="prop-section-title">${t('Pronto a trabalhar no <em>primeiro dia</em>', 'Ready to work on <em>day one</em>')}</h2>
     <div class="include-grid">
-      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">Dístico TVDE</div><div class="include-sub">Legalização completa incluída</div></div></div>
-      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">Seguro TVDE</div><div class="include-sub">Mediação tratada por nós</div></div></div>
-      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">Slot na frota Vianta</div><div class="include-sub">35 €/semana · integração imediata</div></div></div>
-      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">Inspeção e extintor</div><div class="include-sub">Tudo conforme para circular</div></div></div>
-      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">App do motorista</div><div class="include-sub">Recibos, horário e pagamentos</div></div></div>
-      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">Pagamento à 2ª feira</div><div class="include-sub">Sempre pontual, sem exceções</div></div></div>
+      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Dístico TVDE', 'TVDE Badge')}</div><div class="include-sub">${t('Legalização completa incluída', 'Full legalization included')}</div></div></div>
+      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Seguro TVDE', 'TVDE Insurance')}</div><div class="include-sub">${t('Mediação tratada por nós', 'Brokerage handled by us')}</div></div></div>
+      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Slot na frota Vianta', 'Slot in Vianta fleet')}</div><div class="include-sub">${t('35 €/semana · integração imediata', '35 €/week · immediate integration')}</div></div></div>
+      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Inspeção e extintor', 'Inspection & fire extinguisher')}</div><div class="include-sub">${t('Tudo conforme para circular', 'Everything compliant to operate')}</div></div></div>
+      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('App do motorista', 'Driver app')}</div><div class="include-sub">${t('Recibos, horário e pagamentos', 'Receipts, schedule & payments')}</div></div></div>
+      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Pagamento à 2ª feira', 'Payment every Monday')}</div><div class="include-sub">${t('Sempre pontual, sem exceções', 'Always on time, no exceptions')}</div></div></div>
     </div>
-    <div class="include-note"><strong>Garantia de fábrica</strong> incluída em todas as viaturas · Extensão para atividade TVDE disponível (custo do cliente)</div>
+    <div class="include-note"><strong>${t('Garantia de fábrica', 'Factory warranty')}</strong> ${t('incluída em todas as viaturas · Extensão para atividade TVDE disponível (custo do cliente)', 'included on all vehicles · TVDE activity extension available (client cost)')}</div>
   </div>
 
   ${(() => {
@@ -1929,10 +1938,10 @@ function renderProposta() {
     const comFiador = document.getElementById('f-docs-fiador')?.checked;
 
     const idBase = [
-      'Cartão de Identificação (CC, CPLP, TRT, TRP, Certificado UE, Passaporte ou Cartão de Residência)',
+      t('Cartão de Identificação (CC, CPLP, TRT, TRP, Certificado UE, Passaporte ou Cartão de Residência)', 'ID Document (Citizen Card, Passport or Residence Permit)'),
     ];
-    const morada = 'Comprovativo de morada dos últimos 3 meses de serviço fixo, ou certidão de domicílio fiscal';
-    const nib = 'Comprovativo de NIB dos últimos 3 meses com identificação';
+    const morada = t('Comprovativo de morada dos últimos 3 meses de serviço fixo, ou certidão de domicílio fiscal', 'Proof of address from the last 3 months (utility bill) or fiscal domicile certificate');
+    const nib = t('Comprovativo de NIB dos últimos 3 meses com identificação', 'Bank account (IBAN) proof from the last 3 months with identification');
 
     let docsHTML = '';
 
@@ -1940,48 +1949,48 @@ function renderProposta() {
       docsHTML = `
         <ul class="docs-list">
           ${[...idBase, morada, nib,
-            'Recibos verdes — todos os que tiver nos últimos 3 meses',
-            'Último IRS (Modelo 3)',
-            'Documento comprovativo de início de atividade',
+            t('Recibos verdes — todos os que tiver nos últimos 3 meses', 'Freelance receipts — all available from the last 3 months'),
+            t('Último IRS (Modelo 3)', 'Last tax return (IRS Modelo 3)'),
+            t('Documento comprovativo de início de atividade', 'Proof of business activity registration'),
           ].map(d => `<li>${d}</li>`).join('')}
         </ul>
-        <div class="docs-extra">+ Extratos bancários dos últimos 3 meses (não obrigatório, mas ajuda na aprovação)</div>`;
+        <div class="docs-extra">+ ${t('Extratos bancários dos últimos 3 meses (não obrigatório, mas ajuda na aprovação)', 'Bank statements from the last 3 months (optional, but helps approval)')}</div>`;
     } else if (docsTipo === 'contrato') {
       docsHTML = `
         <ul class="docs-list">
           ${[...idBase, morada, nib,
-            'Últimos 3 recibos de vencimento',
-            'Último IRS (Modelo 3)',
+            t('Últimos 3 recibos de vencimento', 'Last 3 payslips'),
+            t('Último IRS (Modelo 3)', 'Last tax return (IRS Modelo 3)'),
           ].map(d => `<li>${d}</li>`).join('')}
         </ul>`;
     } else if (docsTipo === 'empresa') {
       docsHTML = `
-        <div class="docs-tipo-label">Dados da empresa</div>
+        <div class="docs-tipo-label">${t('Dados da empresa', 'Company details')}</div>
         <ul class="docs-list">
-          ${['Certidão Permanente válida', morada, nib, 'Último IRC', 'Último IES']
+          ${[t('Certidão Permanente válida', 'Valid Commercial Registry Certificate'), morada, nib, t('Último IRC', 'Last corporate tax return (IRC)'), t('Último IES', 'Last IES declaration')]
             .map(d => `<li>${d}</li>`).join('')}
         </ul>
-        <div class="docs-tipo-label">Dados dos sócios</div>
+        <div class="docs-tipo-label">${t('Dados dos sócios', 'Partners / shareholders details')}</div>
         <ul class="docs-list">
-          ${[...idBase, morada, nib, 'Últimos 3 recibos de vencimento', 'Último IRS (Modelo 3)']
+          ${[...idBase, morada, nib, t('Últimos 3 recibos de vencimento', 'Last 3 payslips'), t('Último IRS (Modelo 3)', 'Last tax return (IRS Modelo 3)')]
             .map(d => `<li>${d}</li>`).join('')}
         </ul>`;
     }
 
     const fiadorHTML = comFiador ? `
       <div class="docs-fiador">
-        <div class="docs-fiador-label">Fiador / 2.º titular</div>
+        <div class="docs-fiador-label">${t('Fiador / 2.º titular', 'Guarantor / 2nd holder')}</div>
         <ul class="docs-list">
-          ${['Cartão de Cidadão', 'Comprovativo de morada', 'Comprovativo de IBAN',
-             'Últimos 3 recibos verdes', 'Contacto e email',
+          ${[t('Cartão de Cidadão', 'ID Document'), t('Comprovativo de morada', 'Proof of address'), t('Comprovativo de IBAN', 'Bank account (IBAN) proof'),
+             t('Últimos 3 recibos verdes', 'Last 3 freelance receipts'), t('Contacto e email', 'Contact & email'),
           ].map(d => `<li>${d}</li>`).join('')}
         </ul>
       </div>` : '';
 
     return `
     <div class="prop-section">
-      <div class="prop-section-label">Próximos passos</div>
-      <h2 class="prop-section-title">Documentos <em>necessários</em></h2>
+      <div class="prop-section-label">${t('Próximos passos', 'Next steps')}</div>
+      <h2 class="prop-section-title">${t('Documentos <em>necessários</em>', '<em>Required</em> documents')}</h2>
       <div class="docs-section">
         ${docsHTML}
         ${fiadorHTML}
@@ -1992,11 +2001,11 @@ function renderProposta() {
   <!-- CTA -->
   <div class="prop-cta">
     <div>
-      <div class="cta-title">Pronto para<br><em>começar?</em></div>
+      <div class="cta-title">${t('Pronto para<br><em>começar?</em>', 'Ready to<br><em>get started?</em>')}</div>
 
     </div>
     <div class="cta-contacts">
-      <div class="cta-contact-label">Fala connosco</div>
+      <div class="cta-contact-label">${t('Fala connosco', 'Talk to us')}</div>
       <div class="cta-contact-val">comercial@vianta.site</div>
       <div class="cta-contact-val">Email</div>
     </div>
@@ -2005,7 +2014,7 @@ function renderProposta() {
   <!-- FOOTER -->
   <div class="prop-footer">
     <div class="prop-footer-brand">Vianta TVDE</div>
-    <div class="prop-footer-note">Sujeita a aprovação de crédito · Valores com IVA incluído</div>
+    <div class="prop-footer-note">${t('Sujeita a aprovação de crédito · Valores com IVA incluído', 'Subject to credit approval · Prices include VAT')}</div>
   </div>`;
   }
 
