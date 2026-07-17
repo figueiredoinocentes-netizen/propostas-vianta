@@ -801,6 +801,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); backgro
           <option value="">— Não incluir —</option>
           <option value="eni">Particular · ENI / Recibos Verdes</option>
           <option value="contrato">Particular · Trabalhador c/ Contrato</option>
+          <option value="misto">Particular · Contrato + Recibos Verdes</option>
           <option value="empresa">Empresa</option>
         </select>
       </div>
@@ -1963,6 +1964,17 @@ function renderProposta() {
             t('Último IRS (Modelo 3)', 'Last tax return (IRS Modelo 3)'),
           ].map(d => `<li>${d}</li>`).join('')}
         </ul>`;
+    } else if (docsTipo === 'misto') {
+      docsHTML = `
+        <ul class="docs-list">
+          ${[...idBase, morada, nib,
+            t('Últimos 3 recibos de vencimento', 'Last 3 payslips'),
+            t('Recibos verdes — todos os que tiver nos últimos 3 meses', 'Freelance receipts — all available from the last 3 months'),
+            t('Último IRS (Modelo 3)', 'Last tax return (IRS Modelo 3)'),
+            t('Documento comprovativo de início de atividade (ENI)', 'Proof of freelance activity registration'),
+          ].map(d => `<li>${d}</li>`).join('')}
+        </ul>
+        <div class="docs-extra">+ ${t('Extratos bancários dos últimos 3 meses (não obrigatório, mas ajuda na aprovação)', 'Bank statements from the last 3 months (optional, but helps approval)')}</div>`;
     } else if (docsTipo === 'empresa') {
       docsHTML = `
         <div class="docs-tipo-label">${t('Dados da empresa', 'Company details')}</div>
