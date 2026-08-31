@@ -788,6 +788,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); backgro
           <option value="aluguer">Em aluguer</option>
           <option value="inelegivel">Viatura própria — vai ficar inelegível</option>
           <option value="upgrade">Viatura própria — quer upgrade</option>
+          <option value="frotista">Já tem frota própria — quer expandir</option>
         </select>
       </div>
     </div>
@@ -1556,11 +1557,12 @@ function renderProposta() {
   const retomaPrazo = document.getElementById('f-retoma-prazo')?.value.trim() || '';
   const perfil = document.getElementById('f-perfil').value;
   const taglines = {
-    aluguer: t('Deixa de pagar para trabalhar no carro de outra pessoa. Com viatura própria, a prestação mensal pode ser igual ou inferior ao que pagas hoje em aluguer — e o carro é teu.', 'Stop paying to work in someone else\'s car. With your own vehicle, the monthly payment can be equal to or less than what you pay today in rental — and the car is yours.'),
-    inelegivel: t('O teu carro atual vai deixar de ser elegível para TVDE. Esta é a altura certa para fazer a transição — sem pressas, com tempo para escolher a melhor opção.', 'Your current car will soon become ineligible for TVDE. This is the right time to make the switch — no rush, with time to choose the best option.'),
-    upgrade: t('A tua viatura atual já não é a melhor opção para o que procuras. Com esta viatura tens acesso a melhores condições de trabalho em TVDE — mais conforto, mais categorias disponíveis e melhor experiência para os teus passageiros.', 'Your current vehicle is no longer the best option for what you need. With this vehicle you get access to better TVDE working conditions — more comfort, more categories and a better experience for your passengers.'),
+    aluguer: t('Deixe de pagar para trabalhar no carro de outra pessoa. Com viatura própria, a prestação mensal pode ser igual ou inferior ao que paga hoje em aluguer — e o carro é seu.', 'Stop paying to work in someone else\'s car. With your own vehicle, the monthly payment can be equal to or less than what you pay today in rental — and the car is yours.'),
+    inelegivel: t('O seu carro atual vai deixar de ser elegível para TVDE. Esta é a altura certa para fazer a transição — sem pressas, com tempo para escolher a melhor opção.', 'Your current car will soon become ineligible for TVDE. This is the right time to make the switch — no rush, with time to choose the best option.'),
+    upgrade: t('A sua viatura atual já não é a melhor opção para o que procura. Com esta viatura tem acesso a melhores condições de trabalho em TVDE — mais conforto, mais categorias disponíveis e melhor experiência para os seus passageiros.', 'Your current vehicle is no longer the best option for what you need. With this vehicle you get access to better TVDE working conditions — more comfort, more categories and a better experience for your passengers.'),
+    frotista: t('Já gere a sua própria frota TVDE. Esta viatura entra pronta a operar — dístico, seguro e financiamento tratados por nós — para integrar no seu processo, sem depender da nossa operação.', 'You already run your own TVDE fleet. This vehicle comes ready to operate — badge, insurance and financing handled by us — for you to integrate into your own process, independent of our operation.'),
   };
-  const tagline = taglines[perfil] || t('Preparámos esta proposta com base na nossa conversa. Tudo o que precisas para trabalhar com viatura própria em TVDE, numa só solução.', 'We prepared this proposal based on our conversation. Everything you need to work with your own vehicle in TVDE, in one single solution.');
+  const tagline = taglines[perfil] || t('Preparámos esta proposta com base na nossa conversa. Tudo o que precisa para trabalhar com viatura própria em TVDE, numa só solução.', 'We prepared this proposal based on our conversation. Everything you need to work with your own vehicle in TVDE, in one single solution.');
 
   const prop = document.getElementById('proposta');
 
@@ -1670,7 +1672,7 @@ function renderProposta() {
             return '';
           })()}
         </div>
-        <div class="prop-disclaimer">${t('Esta viatura foi identificada pela Vianta como adequada ao teu perfil. Os valores apresentados são estimativas indicativas, sujeitas a aprovação de crédito e à disponibilidade de financiamento.', 'This vehicle was identified by Vianta as suitable for your profile. The values shown are indicative estimates, subject to credit approval and financing availability.')}</div>
+        <div class="prop-disclaimer">${t('Esta viatura foi identificada pela Vianta como adequada ao seu perfil. Os valores apresentados são estimativas indicativas, sujeitas a aprovação de crédito e à disponibilidade de financiamento.', 'This vehicle was identified by Vianta as suitable for your profile. The values shown are indicative estimates, subject to credit approval and financing availability.')}</div>
       </div>`;
     });
   } else {
@@ -1797,8 +1799,8 @@ function renderProposta() {
 
   const numCarros = propostaMode === 'consultoria' ? consultoriaCars.length : selected.size;
   const sectionTitle = numCarros > 1
-    ? t(`Preparámos <em>${numCarros} opções</em> para ti`, `We prepared <em>${numCarros} options</em> for you`)
-    : t('A viatura <em>ideal</em> para ti', 'The <em>ideal</em> vehicle for you');
+    ? t(`Preparámos <em>${numCarros} opções</em> para si`, `We prepared <em>${numCarros} options</em> for you`)
+    : t('A viatura <em>ideal</em> para si', 'The <em>ideal</em> vehicle for you');
 
   // Hero teaser cards (stock only — consultoria cars have no photos from FROTA)
   const heroTeaserHTML = propostaMode === 'stock' && selected.size > 0 ? `
@@ -1878,13 +1880,13 @@ function renderProposta() {
   <!-- SOBRE A VIANTA -->
   <div class="prop-section">
     <div class="prop-section-label">${t('Quem somos', 'About us')}</div>
-    <h2 class="prop-section-title">${t('O teu parceiro TVDE <em>desde 2017</em>', 'Your TVDE partner <em>since 2017</em>')}</h2>
+    <h2 class="prop-section-title">${t('O seu parceiro TVDE <em>desde 2017</em>', 'Your TVDE partner <em>since 2017</em>')}</h2>
     <div class="about-stats">
       <div class="about-stat"><div class="about-stat-num">2017</div><div class="about-stat-label">${t('No mercado', 'In business')}</div></div>
       <div class="about-stat"><div class="about-stat-num">40+</div><div class="about-stat-label">${t('Motoristas na frota', 'Drivers in fleet')}</div></div>
       <div class="about-stat"><div class="about-stat-num">100%</div><div class="about-stat-label">${t('Focados em TVDE', 'TVDE focused')}</div></div>
     </div>
-    <p class="about-text">${t('Não somos um simples stand — criamos as condições para trabalhares em TVDE com tranquilidade. Tratamos do financiamento, do seguro, da legalização e da integração na frota. O teu único trabalho é conduzir.', "We're not just a dealership — we create the conditions for you to work in TVDE with peace of mind. We handle the financing, insurance, legalization and fleet integration. Your only job is to drive.")}</p>
+    <p class="about-text">${t('Não somos um simples stand — criamos as condições para trabalhar em TVDE com tranquilidade. Tratamos do financiamento, do seguro, da legalização e da integração na frota. O seu único trabalho é conduzir.', "We're not just a dealership — we create the conditions for you to work in TVDE with peace of mind. We handle the financing, insurance, legalization and fleet integration. Your only job is to drive.")}</p>
     <div class="about-trust">
       <div class="about-trust-card">
         <div class="about-trust-icon">
@@ -1910,7 +1912,7 @@ function renderProposta() {
 
   <!-- VIATURAS -->
   <div class="prop-section">
-    <div class="prop-section-label">${numCarros > 1 ? t('As tuas opções', 'Your options') : t('A tua viatura', 'Your vehicle')}</div>
+    <div class="prop-section-label">${numCarros > 1 ? t('As suas opções', 'Your options') : t('A sua viatura', 'Your vehicle')}</div>
     <h2 class="prop-section-title">${sectionTitle}</h2>
     ${carsHTML}
   </div>
@@ -1918,7 +1920,16 @@ function renderProposta() {
   <!-- INCLUÍDO -->
   <div class="prop-section">
     <div class="prop-section-label">${t('O que está incluído', "What's included")}</div>
-    <h2 class="prop-section-title">${t('Pronto a trabalhar no <em>primeiro dia</em>', 'Ready to work on <em>day one</em>')}</h2>
+    <h2 class="prop-section-title">${perfil === 'frotista' ? t('Pronto a <em>integrar na sua frota</em>', 'Ready to <em>join your fleet</em>') : t('Pronto a trabalhar no <em>primeiro dia</em>', 'Ready to work on <em>day one</em>')}</h2>
+    ${perfil === 'frotista' ? `
+    <div class="include-grid">
+      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Dístico TVDE', 'TVDE Badge')}</div><div class="include-sub">${t('Legalização completa incluída', 'Full legalization included')}</div></div></div>
+      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Seguro TVDE', 'TVDE Insurance')}</div><div class="include-sub">${t('Mediação tratada por nós', 'Brokerage handled by us')}</div></div></div>
+      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Inspeção e extintor', 'Inspection & fire extinguisher')}</div><div class="include-sub">${t('Tudo conforme para circular', 'Everything compliant to operate')}</div></div></div>
+      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Garantia Standard Vianta', 'Vianta Standard Warranty')}</div><div class="include-sub">${t('Motor e caixa, 18 meses', 'Engine & gearbox, 18 months')}</div></div></div>
+      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Mediação de financiamento', 'Financing brokerage')}</div><div class="include-sub">${t('Simulação e acompanhamento do crédito', 'Simulation and credit process support')}</div></div></div>
+      <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Acompanhamento pós-venda', 'After-sales support')}</div><div class="include-sub">${t('Suporte direto após a entrega', 'Direct support after delivery')}</div></div></div>
+    </div>` : `
     <div class="include-grid">
       <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Dístico TVDE', 'TVDE Badge')}</div><div class="include-sub">${t('Legalização completa incluída', 'Full legalization included')}</div></div></div>
       <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Seguro TVDE', 'TVDE Insurance')}</div><div class="include-sub">${t('Mediação tratada por nós', 'Brokerage handled by us')}</div></div></div>
@@ -1926,7 +1937,7 @@ function renderProposta() {
       <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Inspeção e extintor', 'Inspection & fire extinguisher')}</div><div class="include-sub">${t('Tudo conforme para circular', 'Everything compliant to operate')}</div></div></div>
       <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('App do motorista', 'Driver app')}</div><div class="include-sub">${t('Recibos, horário e pagamentos', 'Receipts, schedule & payments')}</div></div></div>
       <div class="include-item"><div class="include-dot"></div><div><div class="include-name">${t('Pagamento à 2ª feira', 'Payment every Monday')}</div><div class="include-sub">${t('Sempre pontual, sem exceções', 'Always on time, no exceptions')}</div></div></div>
-    </div>
+    </div>`}
     <div class="include-note"><strong>${t('Garantia de fábrica', 'Factory warranty')}</strong> ${t('incluída em todas as viaturas · Extensão para atividade TVDE disponível (custo do cliente)', 'included on all vehicles · TVDE activity extension available (client cost)')}</div>
   </div>
 
@@ -2017,7 +2028,7 @@ function renderProposta() {
 
     </div>
     <div class="cta-contacts">
-      <div class="cta-contact-label">${t('Fala connosco', 'Talk to us')}</div>
+      <div class="cta-contact-label">${t('Fale connosco', 'Talk to us')}</div>
       <div class="cta-contact-val">comercial@vianta.site</div>
       <div class="cta-contact-val">Email</div>
     </div>
