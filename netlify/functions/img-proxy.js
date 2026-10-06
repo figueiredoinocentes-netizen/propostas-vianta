@@ -3,7 +3,7 @@
 const https = require('https');
 const http  = require('http');
 
-const ALLOWED_HOSTS = ['drive.google.com', 'lh3.googleusercontent.com', 'googleusercontent.com'];
+const ALLOWED_HOSTS = ['drive.google.com', 'lh3.googleusercontent.com', 'googleusercontent.com', 'tuwcllpwvxzmrgrqviqu.supabase.co'];
 
 exports.handler = async (event) => {
   const url = event.queryStringParameters?.url;

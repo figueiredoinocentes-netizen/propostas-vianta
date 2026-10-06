@@ -82,7 +82,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); backgro
 .field-group { display: flex; flex-direction: column; gap: 3px; }
 
 /* mode toggle */
-.mode-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.mode-toggle { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
 .mode-btn { padding: 7px 6px; border: 1px solid var(--gray-200); border-radius: 6px; background: white; font-size: 11px; font-family: var(--sans); color: var(--gray-600); cursor: pointer; text-align: center; transition: all 0.15s; line-height: 1.3; }
 .mode-btn:hover { border-color: var(--accent); }
 .mode-btn.active { background: var(--black); border-color: var(--black); color: white; font-weight: 500; }
@@ -728,6 +728,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); backgro
       <div class="mode-toggle">
         <button class="mode-btn active" data-mode="stock" onclick="toggleMode('stock')">Stock / Encomenda</button>
         <button class="mode-btn" data-mode="consultoria" onclick="toggleMode('consultoria')">Consultoria Automóvel</button>
+        <button class="mode-btn" data-mode="aluguer" onclick="toggleMode('aluguer')">Aluguer</button>
       </div>
       <div id="car-list-wrap">
         <div class="car-list" id="car-list"></div>
@@ -740,7 +741,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); backgro
     </div>
 
     <!-- RETOMA GLOBAL -->
-    <div class="sb-section">
+    <div class="sb-section" id="sb-retoma">
       <div class="sb-title">Retoma (se aplicável)</div>
       <div class="field-group">
         <label class="field-label">Valor de retoma</label>
@@ -779,7 +780,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); backgro
     </div>
 
     <!-- PERFIL DO CLIENTE -->
-    <div class="sb-section">
+    <div class="sb-section" id="sb-perfil">
       <div class="sb-title">Perfil do cliente</div>
       <div class="field-group">
         <label class="field-label">Situação atual</label>
@@ -794,7 +795,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); backgro
     </div>
 
     <!-- DOCUMENTOS NECESSÁRIOS -->
-    <div class="sb-section">
+    <div class="sb-section" id="sb-docs">
       <div class="sb-title">Documentos necessários</div>
       <div class="field-group">
         <label class="field-label">Incluir secção de documentos</label>
@@ -916,9 +917,15 @@ let consNextId = 1;
 function toggleMode(mode) {
   propostaMode = mode;
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-  document.getElementById('car-list-wrap').style.display = mode === 'stock' ? '' : 'none';
+  document.getElementById('car-list-wrap').style.display = (mode === 'stock' || mode === 'aluguer') ? '' : 'none';
   document.getElementById('cons-wrap').style.display = mode === 'consultoria' ? 'flex' : 'none';
+  // Retoma, perfil e documentos só fazem sentido na venda
+  ['sb-retoma', 'sb-perfil', 'sb-docs'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = mode === 'aluguer' ? 'none' : '';
+  });
   selected.clear();
+  renderCarList();
   renderFinInputs();
   renderProposta();
 }
@@ -926,6 +933,10 @@ function toggleMode(mode) {
 function addConsultoriaCar() {
   const id = consNextId++;
   consultoriaCars.push({ id, marca: '', preco: '', ano: '', km: '', combustivel: '', cavalos: '', autonomia: '' });
+  Object.keys(aluguerOpts).forEach(k => delete aluguerOpts[k]);
+  aluguerPlanos.p1 = true; aluguerPlanos.p2 = true;
+  ['sb-retoma', 'sb-perfil', 'sb-docs'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = ''; });
+  renderCarList();
   renderConsultoriaList();
   renderFinInputs();
   renderProposta();
@@ -1232,7 +1243,9 @@ function handlePhotoClick(id) {
 function renderCarList() {
   const list = document.getElementById('car-list');
   list.innerHTML = '';
-  FROTA.filter(car => (car.estado || '').toLowerCase() !== 'vendido').forEach(car => {
+  FROTA.filter(car => (car.estado || '').toLowerCase() !== 'vendido')
+    .filter(car => propostaMode === 'aluguer' ? car.tipo === 'Aluguer' : car.tipo !== 'Aluguer')
+    .forEach(car => {
     const div = document.createElement('div');
     div.className = 'car-option';
     div.dataset.id = car.id;
@@ -1240,7 +1253,7 @@ function renderCarList() {
       <input type="checkbox" id="chk-${car.id}" onchange="toggleCar(${car.id})">
       <div>
         <div class="car-option-name">${car.name}${car.versao ? ' · ' + car.versao : ''}</div>
-        <div class="car-option-sub">${car.preco} · ${car.estado}</div>
+        <div class="car-option-sub">${propostaMode === 'aluguer' ? (car.aluguerSemanal ? car.aluguerSemanal + '/sem' : 'sem valor de aluguer') : car.preco} · ${car.estado}</div>
       </div>`;
     div.querySelector('input').addEventListener('change', () => {});
     div.addEventListener('click', (e) => {
@@ -1284,20 +1297,63 @@ async function init() {
   document.getElementById('f-data').value = today;
 
   // Mostrar cache instantaneamente
-  const cached = localStorage.getItem('vianta_frota_cache');
+  const cached = localStorage.getItem('vianta_frota_cache_v2');
   if (cached) {
     try {
       const cars = JSON.parse(cached);
       FROTA.length = 0;
       cars.forEach((c, i) => { c.id = i + 1; FROTA.push(c); });
       renderCarList();
+      aplicarDeepLink();
     } catch(e) {}
   } else {
     renderCarList(); // frota estática enquanto carrega
   }
 
-  // Atualizar da sheet em segundo plano
-  loadFromSheet();
+  // Atualizar da tabela `carros` (Central Vianta) em segundo plano
+  loadFromCentral();
+}
+
+// Link direto vindo do dashboard: ?carro=<id>&tipo=venda|aluguer
+let deepLinkFeito = false;
+function aplicarDeepLink() {
+  if (deepLinkFeito) return;
+  const q = new URLSearchParams(location.search);
+  const carroId = q.get('carro');
+  if (!carroId) { deepLinkFeito = true; return; }
+  const car = FROTA.find(c => String(c.dbId) === carroId);
+  if (!car) return;
+  deepLinkFeito = true;
+  toggleMode(q.get('tipo') === 'aluguer' ? 'aluguer' : 'stock');
+  selected.add(car.id);
+  const el = document.querySelector(`.car-option[data-id="${car.id}"]`);
+  if (el) { el.classList.add('selected'); const chk = el.querySelector('input'); if (chk) chk.checked = true; el.scrollIntoView({ block: 'center' }); }
+  renderFinInputs();
+  renderProposta();
+}
+
+async function loadFromCentral() {
+  try {
+    const resp = await fetch('/.netlify/functions/carros');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const cars = await resp.json();
+    if (!cars.length) throw new Error('Sem viaturas');
+    localStorage.setItem('vianta_frota_cache_v2', JSON.stringify(cars));
+    const antes = JSON.stringify(FROTA.map(({id, ...c}) => c));
+    const mudou = JSON.stringify(cars) !== antes;
+    if (mudou) {
+      FROTA.length = 0;
+      cars.forEach((c, i) => { c.id = i + 1; FROTA.push(c); });
+      selected.clear();
+      renderCarList();
+      renderFinInputs();
+      renderProposta();
+    }
+    aplicarDeepLink();
+  } catch (e) {
+    console.warn('Central não carregada, a usar a sheet:', e.message);
+    loadFromSheet();
+  }
 }
 
 function toggleCar(id) {
@@ -1372,6 +1428,14 @@ function renderFinBlock(wrap, id, carName, fins) {
 
 function renderFinInputs() {
   const wrap = document.getElementById('fin-inputs');
+  if (propostaMode === 'aluguer') {
+    if (selected.size === 0) {
+      wrap.innerHTML = '<div style="font-size:12px;color:var(--gray-400);padding:8px 0;">Seleciona uma viatura para preencher.</div>';
+    } else {
+      renderAluguerInputs(wrap);
+    }
+    return;
+  }
   const hasStock = propostaMode === 'stock' && selected.size > 0;
   const hasCons = propostaMode === 'consultoria' && consultoriaCars.length > 0;
 
@@ -1547,7 +1611,297 @@ function buildRetomaBlock(precoStr, retomaStr, dividaStr) {
   </div>`;
 }
 
+function aboutHTML() {
+  return `
+  <!-- SOBRE A VIANTA -->
+  <div class="prop-section">
+    <div class="prop-section-label">${t('Quem somos', 'About us')}</div>
+    <h2 class="prop-section-title">${t('O seu parceiro TVDE <em>desde 2017</em>', 'Your TVDE partner <em>since 2017</em>')}</h2>
+    <div class="about-stats">
+      <div class="about-stat"><div class="about-stat-num">2017</div><div class="about-stat-label">${t('No mercado', 'In business')}</div></div>
+      <div class="about-stat"><div class="about-stat-num">40+</div><div class="about-stat-label">${t('Motoristas na frota', 'Drivers in fleet')}</div></div>
+      <div class="about-stat"><div class="about-stat-num">100%</div><div class="about-stat-label">${t('Focados em TVDE', 'TVDE focused')}</div></div>
+    </div>
+    <p class="about-text">${t('Não somos um simples stand — criamos as condições para trabalhar em TVDE com tranquilidade. Tratamos do financiamento, do seguro, da legalização e da integração na frota. O seu único trabalho é conduzir.', "We're not just a dealership — we create the conditions for you to work in TVDE with peace of mind. We handle the financing, insurance, legalization and fleet integration. Your only job is to drive.")}</p>
+    <div class="about-trust">
+      <div class="about-trust-card">
+        <div class="about-trust-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#F5A623"/></svg>
+        </div>
+        <div>
+          <div class="about-trust-title">${t('Avaliação Google', 'Google Rating')}</div>
+          <div class="about-trust-val"><span class="about-stars">★★★★★</span> <strong>5.0</strong></div>
+        </div>
+      </div>
+      <div class="about-trust-card">
+        <div class="about-trust-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#fff"/></svg>
+        </div>
+        <div>
+          <div class="about-trust-title">${t('Instalações físicas', 'Physical location')}</div>
+          <div class="about-trust-val">Av. Silvério Galrão Nogueira 8</div>
+          <div class="about-trust-sub">Cheleiros · 2640-169 Lisboa</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+function ctaFooterHTML(nota) {
+  return `
+  <!-- CTA -->
+  <div class="prop-cta">
+    <div>
+      <div class="cta-title">${t('Pronto para<br><em>começar?</em>', 'Ready to<br><em>get started?</em>')}</div>
+
+    </div>
+    <div class="cta-contacts">
+      <div class="cta-contact-label">${t('Fale connosco', 'Talk to us')}</div>
+      <div class="cta-contact-val">comercial@vianta.site</div>
+      <div class="cta-contact-val">Email</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="prop-footer">
+    <div class="prop-footer-brand">Vianta TVDE</div>
+    <div class="prop-footer-note">${nota}</div>
+  </div>
+  `;
+}
+
+// ── ALUGUER ──────────────────────────────────────────────────────────────
+// Proposta de aluguer TVDE (modelo semelhante ao de venda). Oferta e caução
+// vêm do Offer Document / ficha do Stock do dashboard.
+const aluguerOpts = {};                       // id → { semanal, caucao } (edições manuais)
+const aluguerPlanos = { p1: true, p2: true }; // opções de caução a mostrar
+
+function fmtEuroSimples(n) {
+  return n.toLocaleString('pt-PT', { maximumFractionDigits: 2 }) + ' €';
+}
+
+function semanalDe(car) {
+  const o = aluguerOpts[car.id] || {};
+  const manual = (o.semanal || '').trim();
+  const raw = manual || car.aluguerSemanal || '';
+  if (!raw) return '';
+  return /€/.test(raw) ? raw : raw + ' €';
+}
+
+function caucaoTotalDe(car) {
+  const o = aluguerOpts[car.id] || {};
+  const manual = parsePriceNum(o.caucao);
+  if (manual > 0) return manual;
+  if (car.caucao > 0) return car.caucao;
+  return parsePriceNum(car.preco) > 25000 ? 600 : 400;
+}
+
+function planosCaucao(total) {
+  const primeira = total === 600 ? 300 : 200;
+  const depois = total === 600 ? '100 € + 100 € + 100 €' : '100 € + 100 €';
+  return { primeira, depois, prestacao: total / 6 };
+}
+
+function setAluguerOpt(id, campo, valor) {
+  if (!aluguerOpts[id]) aluguerOpts[id] = {};
+  aluguerOpts[id][campo] = valor;
+  renderProposta();
+}
+
+function setAluguerPlano(chave, ligado) {
+  aluguerPlanos[chave] = ligado;
+  renderProposta();
+}
+
+function renderAluguerInputs(wrap) {
+  const campo = 'width:100%;padding:7px 9px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px;font-family:var(--sans);background:white;';
+  wrap.innerHTML = '';
+  const planos = document.createElement('div');
+  planos.className = 'fin-block-sidebar';
+  planos.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:10px;';
+  planos.innerHTML = `
+    <div style="font-size:11px;font-weight:600;color:var(--gray-600);">Opções de caução a mostrar</div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gray-600);cursor:pointer;">
+      <input type="checkbox" ${aluguerPlanos.p1 ? 'checked' : ''} onchange="setAluguerPlano('p1', this.checked)" style="accent-color:var(--accent);width:14px;height:14px;">
+      Opção 1 · Prestações Vianta
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gray-600);cursor:pointer;">
+      <input type="checkbox" ${aluguerPlanos.p2 ? 'checked' : ''} onchange="setAluguerPlano('p2', this.checked)" style="accent-color:var(--accent);width:14px;height:14px;">
+      Opção 2 · Parcela Já (6 meses sem juros)
+    </label>`;
+  wrap.appendChild(planos);
+
+  [...selected].forEach(id => {
+    const car = FROTA.find(c => c.id === id);
+    if (!car) return;
+    const o = aluguerOpts[id] || {};
+    const bloco = document.createElement('div');
+    bloco.style.cssText = 'display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:8px;';
+    bloco.innerHTML = `
+      <div style="font-size:12px;font-weight:600;">${car.name}${car.versao ? ' · ' + car.versao : ''}</div>
+      <label style="font-size:10px;color:var(--gray-400);">Valor de aluguer (€/semana)</label>
+      <input type="text" style="${campo}" placeholder="${car.aluguerSemanal || 'ex: 235 €'}" value="${o.semanal || ''}"
+        oninput="setAluguerOpt(${id}, 'semanal', this.value)">
+      <label style="font-size:10px;color:var(--gray-400);">Caução (€)</label>
+      <input type="text" style="${campo}" placeholder="${caucaoTotalDe(car)} €" value="${o.caucao || ''}"
+        oninput="setAluguerOpt(${id}, 'caucao', this.value)">`;
+    wrap.appendChild(bloco);
+  });
+}
+
+function aluguerCardHTML(car, idx, total) {
+  const badge = total > 1 ? `<span class="car-card-badge">Opção ${idx}</span>` : '';
+  const id = car.id;
+  const hasRealPhotos = car.fotosReais && car.fotosReais.length > 0 && !carPhotos[id];
+  const photoSrc = carPhotos[id] || (car.fotosReais && car.fotosReais[0]) || car.foto || null;
+  const photoBlock = hasRealPhotos ? `
+    <div class="car-real-photos-grid" style="grid-template-columns:${car.fotosReais.length === 1 ? '1fr' : 'repeat(2,1fr)'}">
+      ${car.fotosReais.map((src, i) => `<img src="${src}" alt="Foto ${i + 1}">`).join('')}
+    </div>` : `
+    <div class="car-photo-block" onclick="handlePhotoClick(${id})" title="Clica para substituir a foto">
+      ${photoSrc ? `<img src="${photoSrc}" alt="${car.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+      <div class="car-photo-placeholder" style="${photoSrc ? 'display:none' : ''}">
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M6 7l2-4h8l2 4"/><circle cx="7" cy="17" r="1.5"/><circle cx="17" cy="17" r="1.5"/></svg>
+        Clica para adicionar foto
+      </div>
+      <div class="car-photo-overlay">${photoSrc ? '✎ Substituir foto' : '+ Adicionar foto'}</div>
+    </div>`;
+
+  const semanal = semanalDe(car);
+  const caucao = caucaoTotalDe(car);
+  const pl = planosCaucao(caucao);
+  const spec = (label, val) => val ? `<div class="spec-item"><div class="spec-label">${label}</div><div class="spec-val">${val}</div></div>` : '';
+
+  const opcao1 = aluguerPlanos.p1 ? `
+    <div class="fin-cell">
+      <div class="fin-label">${t('Opção 1 · Prestações Vianta', 'Option 1 · Vianta instalments')}</div>
+      <div class="fin-val big">${fmtEuroSimples(pl.primeira)}</div>
+      <div class="fin-sub">${t('na entrega da viatura (1.ª prestação)', 'on delivery (1st instalment)')}</div>
+      <div class="fin-sub" style="margin-top:6px;">${t('Depois', 'Then')}: ${pl.depois} (${t('mensal', 'monthly')})</div>
+      <div class="fin-sub" style="margin-top:6px;">${t('Sem juros, gerido diretamente pela Vianta', 'Interest-free, managed directly by Vianta')}</div>
+    </div>` : '';
+  const opcao2 = aluguerPlanos.p2 ? `
+    <div class="fin-cell">
+      <div class="fin-label">${t('Opção 2 · Parcela Já', 'Option 2 · Parcela Já')}</div>
+      <div class="fin-val big">6 × ${fmtEuroSimples(pl.prestacao)}</div>
+      <div class="fin-sub">${t('6 meses, sem juros · crédito no terminal, débito automático', '6 months, interest-free · credit at the terminal, direct debit')}</div>
+      <div class="fin-sub" style="margin-top:6px;">${t('Requisitos: cartão de crédito português, cartão multibanco da mesma pessoa e sem dívidas no Banco de Portugal', 'Requirements: Portuguese credit card, ATM card from the same person and no debts at Banco de Portugal')}</div>
+    </div>` : '';
+
+  return `
+  <div class="car-card">
+    <div class="car-card-header">
+      <div class="car-card-name">${car.name}${car.versao ? ' <span style="font-size:16px;font-style:italic;color:var(--gray-400)">' + car.versao + '</span>' : ''}</div>
+      ${badge}
+    </div>
+    ${photoBlock}
+    <div class="car-card-body">
+      <div class="car-specs-grid">
+        ${spec(t('Aluguer / semana', 'Rent / week'), semanal)}
+        ${spec(t('Ano', 'Year'), car.ano)}
+        ${spec(t('Quilómetros', 'Mileage'), car.km)}
+        ${spec(t('Combustível', 'Fuel'), car.combustivel)}
+        ${car.autonomia && car.autonomia !== '—' ? spec(t('Autonomia', 'Range'), car.autonomia) : ''}
+        ${spec(t('Potência', 'Power'), car.cavalos)}
+        ${spec(t('Caixa', 'Gearbox'), car.caixa)}
+      </div>
+      ${car.categorias ? `
+      <div style="margin-top:10px">
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px;">${t('Categorias TVDE', 'TVDE Categories')}</div>
+        <div style="font-size:12px;color:var(--gray-600);">${car.categorias}</div>
+      </div>` : ''}
+      <div class="fin-block" style="margin-top:10px;grid-template-columns:repeat(2,1fr)">
+        <div class="fin-cell">
+          <div class="fin-label">${t('Aluguer semanal', 'Weekly rent')}</div>
+          <div class="fin-val big">${semanal || '—'}</div>
+          <div class="fin-sub">${t('pagamento todas as segundas-feiras', 'paid every Monday')}</div>
+        </div>
+        <div class="fin-cell">
+          <div class="fin-label">${t('Caução', 'Deposit')}</div>
+          <div class="fin-val">${fmtEuroSimples(caucao)}</div>
+          <div class="fin-sub">${t('a pagar em prestações (ver opções)', 'payable in instalments (see options)')}</div>
+        </div>
+      </div>
+      ${(opcao1 || opcao2) ? `
+      <div style="margin-top:10px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:6px;">${t('Como pagar a caução', 'How to pay the deposit')}</div>
+      <div class="fin-block" style="grid-template-columns:repeat(${(aluguerPlanos.p1 ? 1 : 0) + (aluguerPlanos.p2 ? 1 : 0)},1fr)">${opcao1}${opcao2}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderPropostaAluguer() {
+  const cliente = document.getElementById('f-cliente').value.trim() || null;
+  const gestor = document.getElementById('f-gestor').value.trim();
+  const data = document.getElementById('f-data').value;
+  const prop = document.getElementById('proposta');
+
+  if (!cliente && selected.size === 0) {
+    prop.innerHTML = `<div class="empty-state"><div class="empty-state-title">A tua proposta aparece aqui</div><div class="empty-state-sub">Preenche os campos à esquerda para começar</div></div>`;
+    return;
+  }
+
+  const nomeDisplay = cliente || 'Cliente';
+  const dataDisplay = data ? formatDate(data) : '';
+  const ids = [...selected];
+  const carsHTML = ids
+    .map((id, i) => {
+      const car = FROTA.find(c => c.id === id);
+      return car ? aluguerCardHTML(car, i + 1, ids.length) : '';
+    })
+    .join('');
+  const numCarros = ids.length;
+  const sectionTitle = numCarros > 1
+    ? t(`Preparámos <em>${numCarros} opções</em> para si`, `We prepared <em>${numCarros} options</em> for you`)
+    : t('A viatura <em>ideal</em> para si', 'The <em>ideal</em> vehicle for you');
+  const tagline = t(
+    'Preparámos esta proposta de aluguer com base na nossa conversa. Viatura pronta a trabalhar, manutenção por nossa conta e saída com 15 dias de aviso — o seu único trabalho é conduzir.',
+    'We prepared this rental proposal based on our conversation. A vehicle ready to work, maintenance on us and exit with 15 days\' notice — your only job is to drive.'
+  );
+  const inc = (nome, sub) => `<div class="include-item"><div class="include-dot"></div><div><div class="include-name">${nome}</div><div class="include-sub">${sub}</div></div></div>`;
+
+  prop.innerHTML = `
+  ${TWEAKS.showTopBar ? `<div class="prop-topbar" style="background:${TWEAKS.topBarColor}">
+    <img id="topbar-logo" src="${LOGO_SRC}" alt="Vianta TVDE" style="height:38px;display:block;">
+    <div class="prop-topbar-tag">${t('Proposta de Aluguer', 'Rental Proposal')}</div>
+  </div>` : ''}
+  <div class="prop-hero">
+    <div class="prop-greeting">${t('Proposta personalizada', 'Personalised Proposal')}</div>
+    <h1 class="prop-name"><em>${nomeDisplay}</em></h1>
+    <p class="prop-tagline">${tagline}</p>
+    <div class="prop-meta">
+      <div class="prop-meta-item"><div class="prop-meta-label">${t('Gestor de conta', 'Account Manager')}</div><div class="prop-meta-val">${gestor || '—'}</div></div>
+      ${dataDisplay ? `<div class="prop-meta-item"><div class="prop-meta-label">${t('Data', 'Date')}</div><div class="prop-meta-val">${dataDisplay}</div></div>` : ''}
+    </div>
+  </div>
+
+  ${aboutHTML()}
+
+  <div class="prop-section">
+    <div class="prop-section-label">${numCarros > 1 ? t('As suas opções', 'Your options') : t('A sua viatura', 'Your vehicle')}</div>
+    <h2 class="prop-section-title">${sectionTitle}</h2>
+    ${carsHTML || `<div style="color:var(--gray-400);font-size:13px;padding:16px 0;">Seleciona uma viatura de aluguer.</div>`}
+  </div>
+
+  <div class="prop-section">
+    <div class="prop-section-label">${t('O que está incluído', "What's included")}</div>
+    <h2 class="prop-section-title">${t('Tudo o que precisa para <em>conduzir</em>', 'Everything you need to <em>drive</em>')}</h2>
+    <div class="include-grid">
+      ${inc(t('Viatura pronta a trabalhar', 'Vehicle ready to work'), t('Dístico e seguro incluídos', 'Badge and insurance included'))}
+      ${inc(t('Manutenção', 'Maintenance'), t('A cargo da Vianta', 'Handled by Vianta'))}
+      ${inc(t('Pagamentos semanais', 'Weekly payments'), t('Todas as segundas-feiras', 'Every Monday'))}
+      ${inc(t('Viatura de substituição', 'Replacement vehicle'), t('Garantida', 'Guaranteed'))}
+      ${inc(t('Saída com aviso de 15 dias', 'Exit with 15 days\' notice'), t('Sem contrato longo', 'No long-term contract'))}
+      ${inc(t('Gestor de frota', 'Fleet manager'), t('Suporte direto', 'Direct support'))}
+      ${inc(t('App do motorista', 'Driver app'), t('Histórico de despesas e ganhos', 'History of expenses and earnings'))}
+    </div>
+  </div>
+
+  ${ctaFooterHTML(t('Caução paga em prestações, de acordo com a opção escolhida', 'Deposit paid in instalments, according to the chosen option'))}`;
+}
+
 function renderProposta() {
+  if (propostaMode === 'aluguer') return renderPropostaAluguer();
   const cliente = document.getElementById('f-cliente').value.trim() || null;
   const gestor = document.getElementById('f-gestor').value.trim();
   const data = document.getElementById('f-data').value;
@@ -1877,38 +2231,7 @@ function renderProposta() {
     </div>
   </div>
 
-  <!-- SOBRE A VIANTA -->
-  <div class="prop-section">
-    <div class="prop-section-label">${t('Quem somos', 'About us')}</div>
-    <h2 class="prop-section-title">${t('O seu parceiro TVDE <em>desde 2017</em>', 'Your TVDE partner <em>since 2017</em>')}</h2>
-    <div class="about-stats">
-      <div class="about-stat"><div class="about-stat-num">2017</div><div class="about-stat-label">${t('No mercado', 'In business')}</div></div>
-      <div class="about-stat"><div class="about-stat-num">40+</div><div class="about-stat-label">${t('Motoristas na frota', 'Drivers in fleet')}</div></div>
-      <div class="about-stat"><div class="about-stat-num">100%</div><div class="about-stat-label">${t('Focados em TVDE', 'TVDE focused')}</div></div>
-    </div>
-    <p class="about-text">${t('Não somos um simples stand — criamos as condições para trabalhar em TVDE com tranquilidade. Tratamos do financiamento, do seguro, da legalização e da integração na frota. O seu único trabalho é conduzir.', "We're not just a dealership — we create the conditions for you to work in TVDE with peace of mind. We handle the financing, insurance, legalization and fleet integration. Your only job is to drive.")}</p>
-    <div class="about-trust">
-      <div class="about-trust-card">
-        <div class="about-trust-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#F5A623"/></svg>
-        </div>
-        <div>
-          <div class="about-trust-title">${t('Avaliação Google', 'Google Rating')}</div>
-          <div class="about-trust-val"><span class="about-stars">★★★★★</span> <strong>5.0</strong></div>
-        </div>
-      </div>
-      <div class="about-trust-card">
-        <div class="about-trust-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#fff"/></svg>
-        </div>
-        <div>
-          <div class="about-trust-title">${t('Instalações físicas', 'Physical location')}</div>
-          <div class="about-trust-val">Av. Silvério Galrão Nogueira 8</div>
-          <div class="about-trust-sub">Cheleiros · 2640-169 Lisboa</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  ${aboutHTML()}
 
   <!-- VIATURAS -->
   <div class="prop-section">
@@ -2021,24 +2344,7 @@ function renderProposta() {
     </div>`;
   })()}
 
-  <!-- CTA -->
-  <div class="prop-cta">
-    <div>
-      <div class="cta-title">${t('Pronto para<br><em>começar?</em>', 'Ready to<br><em>get started?</em>')}</div>
-
-    </div>
-    <div class="cta-contacts">
-      <div class="cta-contact-label">${t('Fale connosco', 'Talk to us')}</div>
-      <div class="cta-contact-val">comercial@vianta.site</div>
-      <div class="cta-contact-val">Email</div>
-    </div>
-  </div>
-
-  <!-- FOOTER -->
-  <div class="prop-footer">
-    <div class="prop-footer-brand">Vianta TVDE</div>
-    <div class="prop-footer-note">${t('Sujeita a aprovação de crédito · Valores com IVA incluído', 'Subject to credit approval · Prices include VAT')}</div>
-  </div>`;
+  ${ctaFooterHTML(t('Sujeita a aprovação de crédito · Valores com IVA incluído', 'Subject to credit approval · Prices include VAT'))}`;
   }
 
 // Converte imagem para base64 via proxy server-side (resolve CORS do Google Drive)
