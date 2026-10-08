@@ -1834,8 +1834,8 @@ function aluguerCardHTML(car, idx, total) {
   const hasRealPhotos = car.fotosReais && car.fotosReais.length > 0 && !carPhotos[id];
   const photoSrc = carPhotos[id] || (car.fotosReais && car.fotosReais[0]) || car.foto || null;
   const photoBlock = hasRealPhotos ? `
-    <div class="car-real-photos-grid" style="grid-template-columns:${car.fotosReais.length === 1 ? '1fr' : 'repeat(2,1fr)'}">
-      ${car.fotosReais.map((src, i) => `<img src="${src}" alt="Foto ${i + 1}">`).join('')}
+    <div class="car-real-photos-grid" style="grid-template-columns:${Math.min(car.fotosReais.length, 8) === 1 ? '1fr' : 'repeat(2,1fr)'}">
+      ${car.fotosReais.slice(0, 8).map((src, i) => `<img src="${src}" alt="Foto ${i + 1}">`).join('')}
     </div>` : `
     <div class="car-photo-block" onclick="handlePhotoClick(${id})" title="Clica para substituir a foto">
       ${photoSrc ? `<img src="${photoSrc}" alt="${car.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
@@ -2118,8 +2118,8 @@ function renderProposta() {
     const hasRealPhotos = car.fotosReais && car.fotosReais.length > 0 && !carPhotos[id];
     const photoSrc = carPhotos[id] || (car.fotosReais && car.fotosReais[0]) || car.foto || null;
     const photoBlock = hasRealPhotos ? `
-      <div class="car-real-photos-grid" style="grid-template-columns:${car.fotosReais.length === 1 ? '1fr' : 'repeat(2,1fr)'}">
-        ${car.fotosReais.map((src, i) => `<img src="${src}" alt="Foto ${i + 1}">`).join('')}
+      <div class="car-real-photos-grid" style="grid-template-columns:${Math.min(car.fotosReais.length, 8) === 1 ? '1fr' : 'repeat(2,1fr)'}">
+        ${car.fotosReais.slice(0, 8).map((src, i) => `<img src="${src}" alt="Foto ${i + 1}">`).join('')}
       </div>` : `
       <div class="car-photo-block" onclick="handlePhotoClick(${id})" title="Clica para substituir a foto">
         ${photoSrc
