@@ -1087,6 +1087,35 @@ function removeConsExtraPhoto(cid, idx) {
 const finSelections = {};    // { carId: Set<index|'custom'> }
 const finEntradas = {};      // { carId: string }
 const finCustom = {};        // { carId: { prestacao, prazo } }
+const finDesconto = {};      // { carId: string } desconto comercial (€)
+const stockManual = {};      // { carId: [{ prestacao, prazo }] } planos manuais (quando há desconto)
+
+function getDesconto(id) {
+  const d = parsePriceNum(finDesconto[id]);
+  const car = FROTA.find(c => c.id === id);
+  const p = car ? parsePriceNum(car.preco) : 0;
+  return (d > 0 && d < p) ? d : 0;
+}
+// Cópia da viatura com preço final (após desconto) e dados do desconto
+function effCar(car) {
+  const d = getDesconto(car.id);
+  if (!d) return car;
+  const orig = parsePriceNum(car.preco);
+  return { ...car, precoOriginal: car.preco, desconto: d, preco: fmtMoney(orig - d) };
+}
+function priceSpecHTML(car) {
+  if (!car.desconto) return `<div class="spec-item"><div class="spec-label">${t('Preço', 'Price')}</div><div class="spec-val">${car.preco}</div></div>`;
+  return `<div class="spec-item" style="grid-column:1/-1"><div class="spec-label">${t('Preço', 'Price')}</div>
+    <div class="spec-val" style="display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;">
+      <span style="text-decoration:line-through;color:var(--gray-400);font-weight:400;">${car.precoOriginal}</span>
+      <span style="color:var(--accent);">${t('Desconto comercial', 'Commercial discount')}: −${fmtMoney(car.desconto)}</span>
+      <span style="font-weight:600;">${car.preco}</span>
+    </div></div>`;
+}
+function setStockDesconto(id, v) { finDesconto[id] = v; renderProposta(); }
+function addStockPlano(id) { (stockManual[id] = stockManual[id] || []).push({ prestacao: '', prazo: '' }); renderFinInputs(); renderProposta(); }
+function removeStockPlano(id, i) { if (stockManual[id]) { stockManual[id].splice(i, 1); renderFinInputs(); renderProposta(); } }
+function updateStockPlano(id, i, f, v) { (stockManual[id] = stockManual[id] || [])[i] = { ...(stockManual[id][i] || { prestacao: '', prazo: '' }), [f]: v }; renderProposta(); }
 const finScenarioData = {};  // { carId: { cenarios, receitaMensal, kmsAnuais, taxaTAN } }
 
 let LANG = 'pt';
@@ -1417,11 +1446,42 @@ function renderFinBlock(wrap, id, carName, fins) {
       </div>
     </div>` : '';
 
+  const baseCar = FROTA.find(c => c.id === id);
+  const desc = getDesconto(id);
+  const precoOrig = parsePriceNum(baseCar.preco);
+  const descontoHTML = `
+      <div class="field-group">
+        <label class="field-label">Desconto comercial (€)</label>
+        <input type="text" class="fin-custom-input" placeholder="ex: 1.500 €" value="${finDesconto[id] || ''}"
+          oninput="setStockDesconto(${idJ},this.value)" onchange="renderFinInputs()">
+        <div style="font-size:11px;color:var(--gray-600);margin-top:4px;">${desc
+          ? `Inicial ${fmtMoney(precoOrig)} − desconto ${fmtMoney(desc)} = <strong>${fmtMoney(precoOrig - desc)}</strong>`
+          : `Preço inicial: ${fmtMoney(precoOrig)}`}</div>
+      </div>`;
+  const manualHTML = desc ? `
+      <div style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gray-600);">Plano manual (valores default não se aplicam com desconto)</div>
+      ${(stockManual[id] || []).map((p, i) => `
+        <div class="fin-custom-row" style="grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:6px">
+          <div><div class="fin-custom-label">Prestação/mês</div>
+            <input class="fin-custom-input" type="text" placeholder="ex: 350 €" value="${p.prestacao}" oninput="updateStockPlano(${idJ},${i},'prestacao',this.value)"></div>
+          <div><div class="fin-custom-label">Prazo</div>
+            <input class="fin-custom-input" type="text" placeholder="ex: 84 meses" value="${p.prazo}" oninput="updateStockPlano(${idJ},${i},'prazo',this.value)"></div>
+          <button type="button" onclick="removeStockPlano(${idJ},${i})" style="padding:6px 9px;border:1px solid var(--gray-200);background:white;border-radius:5px;cursor:pointer;">×</button>
+        </div>`).join('')}
+      <button type="button" class="fin-pill" onclick="addStockPlano(${idJ})"><span class="fin-pill-prazo">+ Adicionar plano</span></button>
+      <div class="field-group">
+        <label class="field-label">Entrada</label>
+        <input type="text" class="fin-entrada" placeholder="0 €" value="${finEntradas[id] || ''}" oninput="finEntradas[${idJ}]=this.value;renderProposta()">
+      </div>` : '';
+
   const block = document.createElement('div');
   block.className = 'fin-car-block';
   block.innerHTML = `
     <div class="fin-car-header">${carName}</div>
     <div class="fin-car-fields">
+      ${descontoHTML}
+      ${manualHTML}
+      <div style="${desc ? 'display:none' : ''}">
       <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-400);">${t('Plano de Financiamento', 'Financing Plan')}</div>
       <div class="fin-pills">
         ${pillsHTML}
@@ -1435,6 +1495,7 @@ function renderFinBlock(wrap, id, carName, fins) {
         <label class="field-label">Entrada</label>
         <input type="text" class="fin-entrada" placeholder="0 €" value="${finEntradas[id] || ''}" oninput="finEntradas[${idJ}]=this.value;renderProposta()">
       </div>` : ''}
+      </div>
     </div>`;
   wrap.appendChild(block);
 }
@@ -1581,6 +1642,10 @@ function getFinData(id) {
   // Stock FROTA cars
   const car = FROTA.find(c => c.id === id);
   const fins = car ? (car.financiamentos || []) : [];
+  if (getDesconto(id)) {
+    const planos = (stockManual[id] || []).filter(p => p.prestacao || p.prazo).map(p => ({ prestacao: p.prestacao || '', prazo: p.prazo || '' }));
+    return { planos, prestacao: planos[0]?.prestacao || '', prazo: planos[0]?.prazo || '', entrada: finEntradas[id] || '' };
+  }
   const sel = finSelections[id] || new Set();
   const planos = [];
   fins.forEach((f, i) => {
@@ -2046,7 +2111,7 @@ function renderProposta() {
     // Stock mode: render from FROTA
     selected.forEach(id => {
     carIdx++;
-    const car = FROTA.find(c => c.id === id);
+    const car = effCar(FROTA.find(c => c.id === id));
     const fin = getFinData(id);
     const badge = selected.size > 1 ? `<span class="car-card-badge">Opção ${carIdx}</span>` : '';
     const retomaRow = retoma ? buildRetomaBlock(car.preco, retoma, retomaDivida) : '';
@@ -2078,7 +2143,7 @@ function renderProposta() {
       ${stockExtraPhotosBlock}
       <div class="car-card-body">
         <div class="car-specs-grid">
-          <div class="spec-item"><div class="spec-label">${t('Preço', 'Price')}</div><div class="spec-val">${car.preco}</div></div>
+          ${priceSpecHTML(car)}
           <div class="spec-item"><div class="spec-label">${t('Ano', 'Year')}</div><div class="spec-val">${car.ano}</div></div>
           <div class="spec-item"><div class="spec-label">${t('Quilómetros', 'Mileage')}</div><div class="spec-val">${car.km}</div></div>
           <div class="spec-item"><div class="spec-label">${t('Combustível', 'Fuel')}</div><div class="spec-val">${car.combustivel}</div></div>
@@ -2173,7 +2238,7 @@ function renderProposta() {
   const heroTeaserHTML = propostaMode === 'stock' && selected.size > 0 ? `
     <div class="hero-teaser">
       ${[...selected].map(id => {
-        const car = FROTA.find(c => c.id === id);
+        const car = effCar(FROTA.find(c => c.id === id));
         const fin = getFinData(id);
         const photoSrc = carPhotos[id] || car.foto || null;
         return `
@@ -2190,7 +2255,7 @@ function renderProposta() {
               <div class="hero-teaser-fin-sub">${fin.prazo ? fmtPrazo(fin.prazo) + ' · ' : ''}${t('estimativa sujeita a aprovação', 'estimate subject to approval')}</div>
             ` : ''}
             <div class="hero-teaser-specs">
-              <div class="hero-teaser-spec"><strong>${car.preco}</strong></div>
+              <div class="hero-teaser-spec"><strong>${car.preco}</strong>${car.desconto ? ` <s style="color:var(--gray-400)">${car.precoOriginal}</s>` : ''}</div>
               <div class="hero-teaser-spec">${car.combustivel}</div>
               ${car.autonomia && car.autonomia !== '—' ? `<div class="hero-teaser-spec">${car.autonomia} ${t('autonomia', 'range')}</div>` : ''}
             </div>
