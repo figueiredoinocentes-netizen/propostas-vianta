@@ -1975,6 +1975,22 @@ function renderPropostaAluguer() {
     </div>
   </div>
 
+  <div class="prop-section">
+    <div class="prop-section-label">${t('Próximos passos', 'Next steps')}</div>
+    <h2 class="prop-section-title">${t('Documentos <em>necessários</em>', '<em>Required</em> documents')}</h2>
+    <div class="docs-section">
+      <ul class="docs-list">
+        ${[
+          t('Documento de identificação (CC, título de residência ou passaporte)', 'ID document (Citizen Card, residence permit or passport)'),
+          t('Carta de condução', 'Driving licence'),
+          t('Cartão de motorista TVDE', 'TVDE driver card'),
+          t('Morada e email', 'Address and email'),
+          t('Comprovativo de IBAN', 'Bank account (IBAN) proof'),
+        ].map(d => `<li>${d}</li>`).join('')}
+      </ul>
+    </div>
+  </div>
+
   ${ctaFooterHTML(t('Caução paga em prestações, de acordo com a opção escolhida', 'Deposit paid in instalments, according to the chosen option'))}`;
 }
 
