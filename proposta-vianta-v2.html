@@ -1697,7 +1697,7 @@ function aboutHTML() {
     <h2 class="prop-section-title">${t('O seu parceiro TVDE <em>desde 2017</em>', 'Your TVDE partner <em>since 2017</em>')}</h2>
     <div class="about-stats">
       <div class="about-stat"><div class="about-stat-num">2017</div><div class="about-stat-label">${t('No mercado', 'In business')}</div></div>
-      <div class="about-stat"><div class="about-stat-num">40+</div><div class="about-stat-label">${t('Motoristas na frota', 'Drivers in fleet')}</div></div>
+      <div class="about-stat"><div class="about-stat-num">50+</div><div class="about-stat-label">${t('Motoristas na frota', 'Drivers in fleet')}</div></div>
       <div class="about-stat"><div class="about-stat-num">100%</div><div class="about-stat-label">${t('Focados em TVDE', 'TVDE focused')}</div></div>
     </div>
     <p class="about-text">${t('Não somos um simples stand — criamos as condições para trabalhar em TVDE com tranquilidade. Tratamos do financiamento, do seguro, da legalização e da integração na frota. O seu único trabalho é conduzir.', "We're not just a dealership — we create the conditions for you to work in TVDE with peace of mind. We handle the financing, insurance, legalization and fleet integration. Your only job is to drive.")}</p>
@@ -1968,7 +1968,6 @@ function renderPropostaAluguer() {
       ${inc(t('Viatura pronta a trabalhar', 'Vehicle ready to work'), t('Dístico e seguro incluídos', 'Badge and insurance included'))}
       ${inc(t('Manutenção', 'Maintenance'), t('A cargo da Vianta', 'Handled by Vianta'))}
       ${inc(t('Pagamentos semanais', 'Weekly payments'), t('Todas as segundas-feiras', 'Every Monday'))}
-      ${inc(t('Viatura de substituição', 'Replacement vehicle'), t('Garantida', 'Guaranteed'))}
       ${inc(t('Saída com aviso de 15 dias', 'Exit with 15 days\' notice'), t('Sem contrato longo', 'No long-term contract'))}
       ${inc(t('Gestor de frota', 'Fleet manager'), t('Suporte direto', 'Direct support'))}
       ${inc(t('App do motorista', 'Driver app'), t('Histórico de despesas e ganhos', 'History of expenses and earnings'))}
@@ -2525,7 +2524,8 @@ async function exportPDF() {
   const dataFormatada = dataVal
     ? dataVal.split('-').reverse().join('-') // DD-MM-YYYY
     : new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
-  const filename = `Proposta Vianta - ${cliente} - ${dataFormatada}.pdf`;
+  const tipoProposta = propostaMode === 'aluguer' ? 'Aluguer' : 'Compra';
+  const filename = `Proposta ${tipoProposta} Vianta - ${cliente} - ${dataFormatada}.pdf`;
 
   const btn = document.getElementById('btn-export');
   btn.disabled = true;
