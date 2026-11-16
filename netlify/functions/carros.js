@@ -27,8 +27,8 @@ function combustivelParaProposta(c) {
     .filter(Boolean);
   if (!combinacao.length) return combustivel;
 
-  const detalhePlugIn = c.plug_in === true ? 'Plug-in' : c.plug_in === false ? 'não Plug-in' : '';
-  return `Híbrido${detalhePlugIn ? ` ${detalhePlugIn}` : ''} (${combinacao.join(' + ')})`;
+  const detalhePlugIn = c.plug_in === true ? ' — Plug-in' : c.plug_in === false ? ' — não plug-in' : '';
+  return `Híbrido${detalhePlugIn} (${combinacao.join(' + ')})`;
 }
 
 function mapCarro(c) {

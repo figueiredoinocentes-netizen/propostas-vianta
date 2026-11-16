@@ -30,7 +30,7 @@ test('proposal fuel shows the two fuels and Plug-in status when true', async () 
     combustivel_secundario: 'Elétrico',
     plug_in: true,
   });
-  assert.equal(car.combustivel, 'Híbrido Plug-in (Gasolina + Elétrico)');
+  assert.equal(car.combustivel, 'Híbrido — Plug-in (Gasolina + Elétrico)');
 });
 
 test('proposal fuel shows the two fuels and explicitly says non Plug-in when false', async () => {
@@ -40,7 +40,7 @@ test('proposal fuel shows the two fuels and explicitly says non Plug-in when fal
     combustivel_secundario: 'Gasolina',
     plug_in: false,
   });
-  assert.equal(car.combustivel, 'Híbrido não Plug-in (Gasóleo/Diesel + Gasolina)');
+  assert.equal(car.combustivel, 'Híbrido — não plug-in (Gasóleo/Diesel + Gasolina)');
 });
 
 test('legacy hybrid without the new fields remains readable', async () => {
