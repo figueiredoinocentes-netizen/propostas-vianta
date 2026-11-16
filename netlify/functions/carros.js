@@ -16,6 +16,21 @@ const grupos = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' '
 const eur = (v) => (num(v) == null ? '' : `${grupos(num(v))} €`);
 const kmTxt = (v) => (num(v) == null ? '' : `${grupos(num(v))} km`);
 
+function combustivelParaProposta(c) {
+  const combustivel = String(c.combustivel || '').trim();
+  if (!combustivel.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes('hibrid')) {
+    return combustivel;
+  }
+
+  const combinacao = [c.combustivel_principal, c.combustivel_secundario]
+    .map((v) => String(v || '').trim())
+    .filter(Boolean);
+  if (!combinacao.length) return combustivel;
+
+  const detalhePlugIn = c.plug_in === true ? 'Plug-in' : c.plug_in === false ? 'não Plug-in' : '';
+  return `Híbrido${detalhePlugIn ? ` ${detalhePlugIn}` : ''} (${combinacao.join(' + ')})`;
+}
+
 function mapCarro(c) {
   const nome = String(c.marca_modelo || '').trim();
   const versao = !vazio(c.versao) && !nome.toLowerCase().includes(String(c.versao).trim().toLowerCase())
@@ -40,7 +55,7 @@ function mapCarro(c) {
     caucao: num(c.caucao),
     ano: vazio(c.ano) ? '' : String(c.ano),
     km: kmTxt(c.kms_atuais),
-    combustivel: c.combustivel || '',
+    combustivel: combustivelParaProposta(c),
     autonomia: num(c.autonomia_km) == null ? '—' : `${num(c.autonomia_km)} km`,
     cavalos: num(c.cavalos) == null ? '' : `${num(c.cavalos)} cv`,
     caixa: c.caixa || '',
