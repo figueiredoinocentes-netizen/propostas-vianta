@@ -16,8 +16,20 @@ const grupos = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' '
 const eur = (v) => (num(v) == null ? '' : `${grupos(num(v))} €`);
 const kmTxt = (v) => (num(v) == null ? '' : `${grupos(num(v))} km`);
 
+// Os registos mais recentes da Central têm a marca em `marca` e só o modelo em
+// `marca_modelo` ("Peugeot" + "5008"); os antigos têm tudo em `marca_modelo`.
+// Junta a marca quando o modelo ainda não a traz.
+function nomeCompleto(c) {
+  let modelo = String(c.marca_modelo || '').trim();
+  const marca = String(c.marca || '').trim();
+  if (/^[a-z]/.test(modelo)) modelo = modelo[0].toUpperCase() + modelo.slice(1);
+  if (!marca) return modelo;
+  if (modelo.toLowerCase().startsWith(marca.toLowerCase())) return modelo;
+  return `${marca} ${modelo}`.trim();
+}
+
 function mapCarro(c) {
-  const nome = String(c.marca_modelo || '').trim();
+  const nome = nomeCompleto(c);
   const versao = !vazio(c.versao) && !nome.toLowerCase().includes(String(c.versao).trim().toLowerCase())
     ? String(c.versao).trim()
     : '';
