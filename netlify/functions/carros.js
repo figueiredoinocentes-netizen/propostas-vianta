@@ -45,6 +45,8 @@ function mapCarro(c) {
     cavalos: num(c.cavalos) == null ? '' : `${num(c.cavalos)} cv`,
     caixa: c.caixa || '',
     bateria: num(c.bateria_kwh) == null ? '' : `${num(c.bateria_kwh)}kwh`,
+    // Saúde da bateria (SOH) certificada, ex. "95.19" → "95%". Vazio se não houver teste.
+    estadoBateria: num(c.estado_bateria_pct) == null ? '' : `${Math.round(num(c.estado_bateria_pct))}%`,
     bagageira: num(c.volume_bagageira) == null ? '' : `${num(c.volume_bagageira)}L`,
     categorias: c.categorias_tvde || '',
     estado: c.estado || '',

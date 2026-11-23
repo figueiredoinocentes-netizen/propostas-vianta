@@ -1880,6 +1880,7 @@ function aluguerCardHTML(car, idx, total) {
         ${spec(t('Combustível', 'Fuel'), car.combustivel)}
         ${car.autonomia && car.autonomia !== '—' ? spec(t('Autonomia', 'Range'), car.autonomia) : ''}
         ${spec(t('Potência', 'Power'), car.cavalos)}
+        ${car.estadoBateria ? spec(t('Saúde da bateria', 'Battery health'), car.estadoBateria + ' · ' + t('teste certificado', 'certified test')) : ''}
         ${spec(t('Caixa', 'Gearbox'), car.caixa)}
       </div>
       ${car.categorias ? `
@@ -2162,6 +2163,7 @@ function renderProposta() {
           <div class="spec-item"><div class="spec-label">${t('Combustível', 'Fuel')}</div><div class="spec-val">${car.combustivel}</div></div>
           ${car.autonomia && car.autonomia !== '—' ? `<div class="spec-item"><div class="spec-label">${t('Autonomia', 'Range')}</div><div class="spec-val">${car.autonomia}</div></div>` : ''}
           ${car.cavalos ? `<div class="spec-item"><div class="spec-label">${t('Potência', 'Power')}</div><div class="spec-val">${car.cavalos}</div></div>` : ''}
+          ${car.estadoBateria ? `<div class="spec-item"><div class="spec-label">${t('Saúde da bateria', 'Battery health')}</div><div class="spec-val">${car.estadoBateria} <span style="font-size:11px;font-weight:400;color:var(--gray-400)">${t('teste certificado', 'certified test')}</span></div></div>` : ''}
         </div>
         ${car.categorias ? `
         <div style="margin-top:10px">
