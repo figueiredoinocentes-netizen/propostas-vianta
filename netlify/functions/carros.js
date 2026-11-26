@@ -16,6 +16,17 @@ const grupos = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' '
 const eur = (v) => (num(v) == null ? '' : `${grupos(num(v))} €`);
 const kmTxt = (v) => (num(v) == null ? '' : `${grupos(num(v))} km`);
 
+// Híbrido → "Híbrido Plug-in (Gasolina + Elétrico)" / "Híbrido (Gasolina + Elétrico)".
+// Replicado de vianta-dashboard src/lib/operacoes/combustivel.ts — manter iguais.
+const norm = (v) => String(v || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+function descricaoCombustivel(c) {
+  const base = String(c.combustivel || '').trim();
+  if (!norm(base).includes('hibrid')) return base;
+  const partes = [c.combustivel_principal, c.combustivel_secundario].map((x) => String(x || '').trim()).filter(Boolean);
+  const nome = partes.some((p) => norm(p).includes('eletric')) && c.plug_in === true ? 'Híbrido Plug-in' : 'Híbrido';
+  return partes.length ? `${nome} (${partes.join(' + ')})` : nome;
+}
+
 // Os registos mais recentes da Central têm a marca em `marca` e só o modelo em
 // `marca_modelo` ("Peugeot" + "5008"); os antigos têm tudo em `marca_modelo`.
 // Junta a marca quando o modelo ainda não a traz.
@@ -52,7 +63,7 @@ function mapCarro(c) {
     caucao: num(c.caucao),
     ano: vazio(c.ano) ? '' : String(c.ano),
     km: kmTxt(c.kms_atuais),
-    combustivel: c.combustivel || '',
+    combustivel: descricaoCombustivel(c),
     autonomia: num(c.autonomia_km) == null ? '—' : `${num(c.autonomia_km)} km`,
     cavalos: num(c.cavalos) == null ? '' : `${num(c.cavalos)} cv`,
     caixa: c.caixa || '',
