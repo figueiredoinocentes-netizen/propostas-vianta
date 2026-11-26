@@ -200,6 +200,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); backgro
 .docs-list li::before { content: ''; flex-shrink: 0; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 6px; }
 .docs-list li strong { color: var(--black); font-weight: 500; }
 .price-iva { font-size: 12px; font-weight: 500; color: var(--accent); margin-top: 4px; line-height: 1.4; }
+.price-sem-iva { font-size: 15px; font-weight: 600; color: var(--black); margin-top: 2px; }
+.price-sem-iva span, .price-tag-iva { font-size: 11px; font-weight: 400; color: var(--gray-400); }
 .docs-extra { font-size: 11px; color: var(--gray-400); font-style: italic; margin-top: 6px; padding-left: 13px; line-height: 1.4; }
 .docs-fiador { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--gray-200); }
 .docs-fiador-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-600); margin-bottom: 10px; }
@@ -1105,20 +1107,30 @@ function effCar(car) {
   return { ...car, precoOriginal: car.preco, desconto: d, preco: fmtMoney(orig - d) };
 }
 // Cliente Empresa (Documentos necessários) + viatura com IVA a 23% (`iva_venda` da Central) → IVA dedutível.
-function ivaDedutivelHTML(car) {
+function ivaDedutivel(car) {
   const empresa = ['f-docs-tipo', 'f-docs-tipo2'].some(id => document.getElementById(id)?.value === 'empresa');
-  if (!empresa || Number(car.ivaVenda) !== 23) return '';
-  return `<div class="price-iva">${t('IVA dedutível para Empresas e ENI (empresário em nome individual)', 'VAT deductible for companies and sole traders')}</div>`;
+  return empresa && Number(car.ivaVenda) === 23;
 }
+// Preço s/ IVA (23%) a partir do preço da proposta (c/ IVA), no mesmo formato "19 500 €".
+function precoSemIva(car) {
+  const n = parsePriceNum(car.preco);
+  return n ? String(Math.round(n / 1.23)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' €' : '';
+}
+function ivaDedutivelHTML(car) {
+  if (!ivaDedutivel(car)) return '';
+  return `<div class="price-sem-iva">${precoSemIva(car)} <span>${t('s/ IVA', 'excl. VAT')}</span></div>
+    <div class="price-iva">${t('IVA dedutível para Empresas e ENI (empresário em nome individual)', 'VAT deductible for companies and sole traders')}</div>`;
+}
+const comIvaTag = (car) => ivaDedutivel(car) ? ` <span class="price-tag-iva">${t('c/ IVA', 'incl. VAT')}</span>` : '';
 function priceSpecHTML(car) {
   const iva = ivaDedutivelHTML(car);
-  if (!car.desconto) return `<div class="spec-item"${iva ? ' style="grid-column:1/-1"' : ''}><div class="spec-label">${t('Preço', 'Price')}</div><div class="spec-val">${car.preco}</div>${iva}</div>`;
+  if (!car.desconto) return `<div class="spec-item"${iva ? ' style="grid-column:1/-1"' : ''}><div class="spec-label">${t('Preço', 'Price')}</div><div class="spec-val">${car.preco}${comIvaTag(car)}</div>${iva}</div>`;
   return `<div class="spec-item" style="grid-column:1/-1"><div class="spec-label">${t('Preço', 'Price')}</div>
     <div class="spec-val" style="display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;">
       <span style="text-decoration:line-through;color:var(--gray-400);font-weight:400;">${car.precoOriginal}</span>
       <span style="color:var(--accent);">${t('Desconto comercial', 'Commercial discount')}: −${fmtMoney(car.desconto)}</span>
-      <span style="font-weight:600;">${car.preco}</span>
-    </div>${ivaDedutivelHTML(car)}</div>`;
+      <span style="font-weight:600;">${car.preco}${comIvaTag(car)}</span>
+    </div>${iva}</div>`;
 }
 function setStockDesconto(id, v) { finDesconto[id] = v; renderProposta(); }
 function addStockPlano(id) { (stockManual[id] = stockManual[id] || []).push({ prestacao: '', prazo: '' }); renderFinInputs(); renderProposta(); }
