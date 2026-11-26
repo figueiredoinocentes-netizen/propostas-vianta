@@ -1283,8 +1283,11 @@ function handlePhotoClick(id) {
 function renderCarList() {
   const list = document.getElementById('car-list');
   list.innerHTML = '';
-  FROTA.filter(car => car.estado === (propostaMode === 'aluguer' ? 'Para Aluguer' : 'Para Venda'))
-    .filter(car => propostaMode === 'aluguer' ? car.tipo === 'Aluguer' : car.tipo !== 'Aluguer')
+  // "Venda e Aluguer" / "Para Venda e Aluguer" aparece nos dois modos.
+  FROTA.filter(car => car.estado === (propostaMode === 'aluguer' ? 'Para Aluguer' : 'Para Venda') || car.estado === 'Para Venda e Aluguer')
+    .filter(car => propostaMode === 'aluguer'
+      ? (car.tipo === 'Aluguer' || car.tipo === 'Venda e Aluguer')
+      : car.tipo !== 'Aluguer')
     .forEach(car => {
     const div = document.createElement('div');
     div.className = 'car-option';

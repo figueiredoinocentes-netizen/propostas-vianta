@@ -87,7 +87,7 @@ exports.handler = async () => {
     const dados = await resp.json();
     const lista = Array.isArray(dados) ? dados : dados.data || [];
     const carros = lista
-      .filter((c) => c.tipo_gestao === 'Venda' || c.tipo_gestao === 'Aluguer')
+      .filter((c) => ['Venda', 'Aluguer', 'Venda e Aluguer'].includes(c.tipo_gestao))
       .map(mapCarro)
       .filter((c) => c.name);
     return {
