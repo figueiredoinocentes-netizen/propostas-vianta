@@ -64,6 +64,7 @@ function mapCarro(c) {
     ano: vazio(c.ano) ? '' : String(c.ano),
     km: kmTxt(c.kms_atuais),
     combustivel: descricaoCombustivel(c),
+    ivaVenda: num(c.iva_venda),
     autonomia: num(c.autonomia_km) == null ? '—' : `${num(c.autonomia_km)} km`,
     cavalos: num(c.cavalos) == null ? '' : `${num(c.cavalos)} cv`,
     caixa: c.caixa || '',

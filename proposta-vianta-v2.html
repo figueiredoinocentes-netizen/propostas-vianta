@@ -199,6 +199,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); backgro
 .docs-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: var(--gray-600); line-height: 1.45; }
 .docs-list li::before { content: ''; flex-shrink: 0; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 6px; }
 .docs-list li strong { color: var(--black); font-weight: 500; }
+.docs-iva { font-size: 12px; font-weight: 600; color: var(--black); border-left: 3px solid var(--accent); padding: 8px 12px; margin-bottom: 16px; background: var(--gray-50, #f7f7f7); line-height: 1.4; }
 .docs-extra { font-size: 11px; color: var(--gray-400); font-style: italic; margin-top: 6px; padding-left: 13px; line-height: 1.4; }
 .docs-fiador { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--gray-200); }
 .docs-fiador-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-600); margin-bottom: 10px; }
@@ -2488,11 +2489,23 @@ function renderProposta() {
         </ul>
       </div>` : '';
 
+    // Empresa: viaturas de venda com IVA a 23% têm IVA dedutível (dado `iva_venda` da Central).
+    let ivaHTML = '';
+    if (propostaMode !== 'aluguer' && propostaMode !== 'consultoria' && (docsTipo === 'empresa' || docsTipo2 === 'empresa')) {
+      const comIva = [...selected].map(id => FROTA.find(c => c.id === id)).filter(c => c && Number(c.ivaVenda) === 23);
+      if (comIva.length) {
+        const txt = t('IVA dedutível para Empresas e ENI (empresário em nome individual)', 'VAT deductible for companies and sole traders');
+        const nomes = selected.size > 1 ? comIva.map(c => [c.name, c.versao].filter(Boolean).join(' ')).join(', ') + ': ' : '';
+        ivaHTML = `<div class="docs-iva">${t('Viatura com IVA a 23%', 'Vehicle with 23% VAT')} · ${nomes}${txt}</div>`;
+      }
+    }
+
     return `
     <div class="prop-section">
       <div class="prop-section-label">${t('Próximos passos', 'Next steps')}</div>
       <h2 class="prop-section-title">${t('Documentos <em>necessários</em>', '<em>Required</em> documents')}</h2>
       <div class="docs-section">
+        ${ivaHTML}
         ${docsHTML}
         ${fiadorHTML}
         ${titular2HTML}
